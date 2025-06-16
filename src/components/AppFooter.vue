@@ -20,28 +20,12 @@
                   preset="plain"
                   color="primary"
                   class="social-btn"
-                  @click="openSocial('facebook')"
-                />
-                <va-button
-                  icon="twitter"
-                  preset="plain"
-                  color="primary"
-                  class="social-btn"
-                  @click="openSocial('twitter')"
-                />
-                <va-button
-                  icon="instagram"
-                  preset="plain"
-                  color="primary"
-                  class="social-btn"
-                  @click="openSocial('instagram')"
                 />
                 <va-button
                   icon="wechat"
                   preset="plain"
                   color="primary"
                   class="social-btn"
-                  @click="openSocial('wechat')"
                 />
               </div>
             </div>
@@ -124,36 +108,9 @@
               </div>
               <div class="contact-details">
                 <span class="contact-label">地址</span>
-                <span class="contact-value">北京市朝阳区xxx大厦</span>
+                <span class="contact-value">湖北省武汉市江夏区佛祖岭街道高新二路129号</span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 底部版权信息 -->
-    <div class="footer-bottom">
-      <div class="footer-bottom-container">
-        <div class="copyright-section">
-          <p class="copyright">© 2024 ShopMart 精品购物平台. 保留所有权利.</p>
-          <div class="legal-links">
-            <router-link to="/legal/terms" class="legal-link">服务条款</router-link>
-            <span class="separator">|</span>
-            <router-link to="/legal/privacy" class="legal-link">隐私政策</router-link>
-            <span class="separator">|</span>
-            <router-link to="/legal/cookies" class="legal-link">Cookie政策</router-link>
-          </div>
-        </div>
-
-        <div class="certificates">
-          <div class="cert-item">
-            <va-icon name="verified" color="success" size="small" />
-            <span>京ICP备xxxxxxxx号-1</span>
-          </div>
-          <div class="cert-item">
-            <va-icon name="security" color="success" size="small" />
-            <span>公安备案号xxxxxxxx</span>
           </div>
         </div>
       </div>
@@ -161,12 +118,7 @@
   </footer>
 </template>
 
-<script setup lang="ts">
-const openSocial = (platform: string) => {
-  // 这里可以添加打开社交媒体的逻辑
-  console.log(`打开${platform}`)
-}
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .app-footer {
@@ -208,7 +160,7 @@ const openSocial = (platform: string) => {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--va-primary), var(--va-secondary));
+  background: var(--va-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -367,137 +319,5 @@ const openSocial = (platform: string) => {
   font-size: 0.9rem;
   color: var(--va-text-primary);
   font-weight: 500;
-}
-
-/* 底部版权区域 */
-.footer-bottom {
-  background: var(--va-background-primary);
-  border-top: 1px solid var(--va-background-border);
-  padding: 1.5rem 0;
-}
-
-.footer-bottom-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.copyright-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.copyright {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--va-text-secondary);
-}
-
-.legal-links {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.legal-link {
-  color: var(--va-text-secondary);
-  text-decoration: none;
-  font-size: 0.8rem;
-  transition: color 0.3s ease;
-}
-
-.legal-link:hover {
-  color: var(--va-primary);
-}
-
-.separator {
-  color: var(--va-background-border);
-  font-size: 0.8rem;
-}
-
-.certificates {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.cert-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--va-text-secondary);
-}
-
-/* 响应式设计 */
-@media (max-width: 1200px) {
-  .footer-container {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 2rem;
-  }
-
-  .footer-brand {
-    grid-column: 1 / -1;
-  }
-
-  .contact-section {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .footer-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 0 1rem;
-  }
-
-  .footer-main {
-    padding: 2rem 0 1.5rem 0;
-  }
-
-  .footer-bottom-container {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0 1rem;
-  }
-
-  .certificates {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .brand-section {
-    max-width: none;
-  }
-
-  .social-links {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer-main {
-    padding: 1.5rem 0 1rem 0;
-  }
-
-  .footer-container {
-    padding: 0 0.5rem;
-  }
-
-  .footer-bottom-container {
-    padding: 0 0.5rem;
-  }
-
-  .contact-section {
-    padding: 1rem;
-  }
 }
 </style>
