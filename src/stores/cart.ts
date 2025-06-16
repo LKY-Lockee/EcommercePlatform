@@ -17,12 +17,13 @@ export const useCartStore = defineStore('cart', () => {
   const selectedItems = computed(() => items.value.filter((item) => item.selected))
 
   const totalAmount = computed(() =>
-    selectedItems.value.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    selectedItems.value.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0),
   )
 
   const totalOriginalAmount = computed(() =>
     selectedItems.value.reduce(
-      (sum, item) => sum + (item.product.original_price || item.product.price) * item.quantity,
+      (sum, item) =>
+        sum + Number(item.product.original_price || item.product.price) * item.quantity,
       0,
     ),
   )

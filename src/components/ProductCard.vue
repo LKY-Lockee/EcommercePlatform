@@ -7,10 +7,10 @@
         class="product-image"
       />
       <div
-        v-if="product.original_price && product.original_price > product.price"
+        v-if="product.original_price && Number(product.original_price) > Number(product.price)"
         class="discount-badge"
       >
-        {{ Math.round((1 - product.price / product.original_price) * 100) }}% OFF
+        {{ Math.round((1 - Number(product.price) / Number(product.original_price)) * 100) }}% OFF
       </div>
     </va-card-content>
 
@@ -19,17 +19,17 @@
         {{ product.name }}
       </h3>
       <div class="product-rating">
-        <va-rating :model-value="product.rating" readonly size="small" color="warning" />
+        <va-rating :model-value="Number(product.rating)" readonly size="small" color="warning" />
         <span class="rating-count">({{ product.rating_count }})</span>
       </div>
 
       <div class="product-price">
-        <span class="current-price">¥{{ product.price.toFixed(2) }}</span>
+        <span class="current-price">¥{{ formatPrice(product.price) }}</span>
         <span
-          v-if="product.original_price && product.original_price > product.price"
+          v-if="product.original_price && Number(product.original_price) > Number(product.price)"
           class="original-price"
         >
-          ¥{{ product.original_price.toFixed(2) }}
+          ¥{{ formatPrice(product.original_price) }}
         </span>
       </div>
 
@@ -70,6 +70,15 @@ const props = defineProps<Props>()
 const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
+
+// 格式化价格，确保始终显示为数字
+const formatPrice = (price: number | string): string => {
+  const numPrice = Number(price)
+  if (isNaN(numPrice)) {
+    return '0.00'
+  }
+  return numPrice.toFixed(2)
+}
 
 const goToDetail = () => {
   router.push(`/product/${props.product.id}`)

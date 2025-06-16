@@ -53,15 +53,15 @@
                   <h3 class="item-name">{{ item.product.name }}</h3>
                   <p class="item-description">{{ item.product.description }}</p>
                   <div class="item-price">
-                    <span class="current-price">¥{{ item.product.price.toFixed(2) }}</span>
+                    <span class="current-price">¥{{ formatPrice(item.product.price) }}</span>
                     <span
                       v-if="
                         item.product.original_price &&
-                        item.product.original_price > item.product.price
+                        Number(item.product.original_price) > Number(item.product.price)
                       "
                       class="original-price"
                     >
-                      ¥{{ item.product.original_price.toFixed(2) }}
+                      ¥{{ formatPrice(item.product.original_price) }}
                     </span>
                   </div>
                 </div>
@@ -78,7 +78,7 @@
 
                 <div class="item-total">
                   <span class="total-price">
-                    ¥{{ (item.product.price * item.quantity).toFixed(2) }}
+                    ¥{{ (Number(item.product.price) * item.quantity).toFixed(2) }}
                   </span>
                 </div>
 
@@ -139,6 +139,15 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
+
+// 格式化价格，确保始终显示为数字
+const formatPrice = (price: number | string): string => {
+  const numPrice = Number(price)
+  if (isNaN(numPrice)) {
+    return '0.00'
+  }
+  return numPrice.toFixed(2)
+}
 
 const allSelected = computed(
   () => cartStore.items.length > 0 && cartStore.items.every((item) => item.selected),

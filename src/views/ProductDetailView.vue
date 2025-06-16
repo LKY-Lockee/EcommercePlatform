@@ -43,25 +43,31 @@
             <h1 class="product-title">{{ product.name }}</h1>
 
             <div class="product-rating">
-              <va-rating :model-value="product.rating" readonly color="warning" />
+              <va-rating :model-value="Number(product.rating)" readonly color="warning" />
               <span class="rating-text"
-                >{{ product.rating }} ({{ product.rating_count }}人评价)</span
+                >{{ Number(product.rating).toFixed(1) }} ({{ product.rating_count }}人评价)</span
               >
             </div>
 
             <div class="product-price">
-              <span class="current-price">¥{{ product.price.toFixed(2) }}</span>
+              <span class="current-price">¥{{ formatPrice(product.price) }}</span>
               <span
-                v-if="product.original_price && product.original_price > product.price"
+                v-if="
+                  product.original_price && Number(product.original_price) > Number(product.price)
+                "
                 class="original-price"
               >
-                ¥{{ product.original_price.toFixed(2) }}
+                ¥{{ formatPrice(product.original_price) }}
               </span>
               <span
-                v-if="product.original_price && product.original_price > product.price"
+                v-if="
+                  product.original_price && Number(product.original_price) > Number(product.price)
+                "
                 class="discount-badge"
               >
-                {{ Math.round((1 - product.price / product.original_price) * 100) }}% OFF
+                {{
+                  Math.round((1 - Number(product.price) / Number(product.original_price)) * 100)
+                }}% OFF
               </span>
             </div>
 
@@ -137,6 +143,15 @@ const product = ref<Product | null>(null)
 const loading = ref(false)
 const quantity = ref(1)
 const currentImage = ref('')
+
+// 格式化价格，确保始终显示为数字
+const formatPrice = (price: number | string): string => {
+  const numPrice = Number(price)
+  if (isNaN(numPrice)) {
+    return '0.00'
+  }
+  return numPrice.toFixed(2)
+}
 
 const currentImage_computed = computed(() => {
   if (!product.value) return ''

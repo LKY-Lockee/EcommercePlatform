@@ -71,9 +71,20 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         p.name,
         p.description,
         p.price,
+        p.original_price,
         p.stock,
+        p.category_id,
+        p.brand,
+        p.sku,
+        p.status,
+        p.featured,
+        p.views,
+        p.sales,
+        p.rating,
+        p.rating_count,
         p.created_at,
-        c.name as category_name
+        c.name as category_name,
+        (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.is_primary = 1 LIMIT 1) as primary_image
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       ${whereClause}

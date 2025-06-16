@@ -4,8 +4,8 @@ export interface Product {
   id: number
   name: string
   description: string
-  price: number
-  original_price?: number
+  price: number | string
+  original_price?: number | string
   stock: number
   category_id: number
   category_name?: string
@@ -15,7 +15,7 @@ export interface Product {
   featured: boolean
   views: number
   sales: number
-  rating: number
+  rating: number | string
   rating_count: number
   primary_image?: string
   images?: ProductImage[]
