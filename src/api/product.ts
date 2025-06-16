@@ -36,6 +36,8 @@ export interface ProductListParams {
   sort_by?: 'created_at' | 'price' | 'sales' | 'rating'
   sort_order?: 'ASC' | 'DESC'
   featured?: boolean
+  min_price?: number
+  max_price?: number
 }
 
 export interface ProductListResponse {

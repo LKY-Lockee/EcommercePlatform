@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProducts, type Product } from '@/api/product'
+import { getProducts, type Product, type ProductListParams } from '@/api/product'
 import { getCategory } from '@/api/category'
 import ProductCard from '@/components/ProductCard.vue'
 
@@ -127,16 +127,7 @@ const loadProducts = async () => {
     loading.value = true
     const categoryId = route.params.id as string
 
-    const params: {
-      page: number
-      limit: number
-      category_id?: number
-      search?: string
-      sort_by?: 'created_at' | 'price' | 'sales' | 'rating'
-      sort_order?: 'ASC' | 'DESC'
-      min_price?: string
-      max_price?: string
-    } = {
+    const params: ProductListParams = {
       page: currentPage.value,
       limit: pageSize.value,
     }
@@ -157,8 +148,8 @@ const loadProducts = async () => {
 
     if (priceRange.value) {
       const [min, max] = priceRange.value.split('-')
-      if (min) params.min_price = min
-      if (max) params.max_price = max
+      if (min && !isNaN(Number(min))) params.min_price = Number(min)
+      if (max && !isNaN(Number(max))) params.max_price = Number(max)
     }
 
     const response = await getProducts(params)

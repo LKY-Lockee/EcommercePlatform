@@ -14,6 +14,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       sort_by = 'created_at',
       sort_order = 'DESC',
       featured,
+      min_price,
+      max_price,
     } = req.query
 
     // 确保参数类型正确
@@ -38,6 +40,17 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     if (featured === 'true') {
       whereClause += ' AND p.featured = ?'
       queryParams.push(1) // 使用数字而不是布尔值
+    }
+
+    // 价格筛选
+    if (min_price && !isNaN(Number(min_price))) {
+      whereClause += ' AND p.price >= ?'
+      queryParams.push(Number(min_price))
+    }
+
+    if (max_price && !isNaN(Number(max_price))) {
+      whereClause += ' AND p.price <= ?'
+      queryParams.push(Number(max_price))
     }
 
     // 验证排序参数

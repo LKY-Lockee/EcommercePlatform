@@ -4,86 +4,8 @@
       <!-- 页面标题和筛选 -->
       <div class="page-header">
         <h1 class="page-title">商品列表</h1>
-        <div class="search-controls">
-          <va-input
-            v-model="searchQuery"
-            placeholder="搜索商品..."
-            class="search-input"
-            @keyup.enter="handleSearch"
-          >
-            <template #appendIcon>
-              <va-button icon="search" flat @click="handleSearch" />
-            </template>
-          </va-input>
-        </div>
-      </div>
-
-      <div class="products-container">
-        <!-- 侧边筛选栏 -->
-        <aside class="filters-sidebar">
-          <va-card>
-            <va-card-content>
-              <h3 class="filter-title">筛选条件</h3>
-
-              <!-- 分类筛选 -->
-              <div class="filter-section">
-                <h4 class="filter-subtitle">商品分类</h4>
-                <va-radio-group v-model="selectedCategory" direction="column">
-                  <va-radio :option="null" label="全部分类" />
-                  <va-radio
-                    v-for="category in categories"
-                    :key="category.id"
-                    :option="category.id"
-                    :label="category.name"
-                  />
-                </va-radio-group>
-              </div>
-
-              <!-- 价格筛选 -->
-              <div class="filter-section">
-                <h4 class="filter-subtitle">价格范围</h4>
-                <div class="price-inputs">
-                  <va-input
-                    v-model="priceRange.min"
-                    placeholder="最低价"
-                    type="number"
-                    size="small"
-                  />
-                  <span>-</span>
-                  <va-input
-                    v-model="priceRange.max"
-                    placeholder="最高价"
-                    type="number"
-                    size="small"
-                  />
-                </div>
-              </div>
-
-              <!-- 品牌筛选 -->
-              <div class="filter-section">
-                <h4 class="filter-subtitle">品牌</h4>
-                <va-checkbox-group v-model="selectedBrands" direction="column">
-                  <va-checkbox
-                    v-for="brand in popularBrands"
-                    :key="brand"
-                    :option="brand"
-                    :label="brand"
-                  />
-                </va-checkbox-group>
-              </div>
-
-              <!-- 筛选按钮 -->
-              <div class="filter-actions">
-                <va-button @click="applyFilters" class="apply-btn"> 应用筛选 </va-button>
-                <va-button flat @click="resetFilters"> 重置 </va-button>
-              </div>
-            </va-card-content>
-          </va-card>
-        </aside>
-
-        <!-- 主要内容区 -->
-        <main class="products-main">
-          <!-- 排序和视图控制 -->
+        <div class="sort-controls">
+          <!-- 排序 -->
           <div class="products-controls">
             <div class="sort-controls">
               <span class="sort-label">排序：</span>
@@ -93,6 +15,7 @@
                 placeholder="选择排序方式"
                 text-by="text"
                 value-by="value"
+                background="#ffffff"
                 @update:model-value="loadProducts"
               />
             </div>
@@ -101,7 +24,115 @@
               <span class="results-count"> 共 {{ pagination.total }} 件商品 </span>
             </div>
           </div>
+        </div>
+      </div>
 
+      <div class="products-container">
+        <!-- 侧边筛选栏 -->
+        <aside class="filters-sidebar">
+          <div class="filters-container">
+            <div class="filter-header">
+              <h3 class="filter-title">
+                <va-icon name="filter_alt" size="1.2rem" />
+                筛选条件
+              </h3>
+              <va-button preset="plain" size="small" @click="resetFilters" class="reset-btn">
+                <va-icon name="refresh" size="small" />
+                重置
+              </va-button>
+            </div>
+
+            <!-- 分类筛选 -->
+            <div class="filter-section">
+              <div class="filter-section-header">
+                <h4 class="filter-subtitle">
+                  <va-icon name="category" size="1rem" />
+                  商品分类
+                </h4>
+              </div>
+              <div class="filter-content">
+                <div class="category-list">
+                  <div
+                    class="category-item"
+                    :class="{ active: selectedCategory === null }"
+                    @click="selectAllCategories"
+                  >
+                    <span class="category-name">全部分类</span>
+                    <va-badge v-if="selectedCategory === null" text="✓" color="primary" />
+                  </div>
+                  <div
+                    v-for="category in categories"
+                    :key="category.id"
+                    class="category-item"
+                    :class="{ active: selectedCategory === category.id }"
+                    @click="selectCategory(category.id)"
+                  >
+                    <span class="category-name">{{ category.name }}</span>
+                    <va-badge v-if="selectedCategory === category.id" text="✓" color="primary" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 价格筛选 -->
+            <div class="filter-section">
+              <div class="filter-section-header">
+                <h4 class="filter-subtitle">
+                  <va-icon name="attach_money" size="1rem" />
+                  价格范围
+                </h4>
+              </div>
+              <div class="filter-content">
+                <div class="price-filter">
+                  <div class="price-inputs">
+                    <va-input
+                      v-model="priceRange.min"
+                      placeholder="最低价"
+                      type="number"
+                      size="small"
+                      class="price-input"
+                      @blur="applyFilters"
+                      @keyup.enter="applyFilters"
+                    >
+                      <template #prependIcon>
+                        <span class="price-symbol">¥</span>
+                      </template>
+                    </va-input>
+                    <span class="price-separator">至</span>
+                    <va-input
+                      v-model="priceRange.max"
+                      placeholder="最高价"
+                      type="number"
+                      size="small"
+                      class="price-input"
+                      @blur="applyFilters"
+                      @keyup.enter="applyFilters"
+                    >
+                      <template #prependIcon>
+                        <span class="price-symbol">¥</span>
+                      </template>
+                    </va-input>
+                  </div>
+                  <div class="price-shortcuts">
+                    <va-button
+                      v-for="range in priceRanges"
+                      :key="range.label"
+                      size="small"
+                      preset="outline"
+                      class="price-shortcut"
+                      @click="setPriceRange(range.min, range.max)"
+                    >
+                      {{ range.label }}
+                    </va-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 主要内容区 -->
+        <main class="products-main">
           <!-- 商品网格 -->
           <div v-if="loading" class="loading-container">
             <va-progress-circle indeterminate />
@@ -147,7 +178,6 @@ const categories = ref<Category[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref<number | null>(null)
-const selectedBrands = ref<string[]>([])
 const currentPage = ref(1)
 const sortBy = ref('created_at_desc')
 
@@ -171,19 +201,12 @@ const sortOptions = [
   { text: '评分最高', value: 'rating_desc' },
 ]
 
-const popularBrands = [
-  'Apple',
-  '华为',
-  '小米',
-  'Nike',
-  'Adidas',
-  '优衣库',
-  '戴森',
-  '宜家',
-  '兰蔻',
-  'SK-II',
-  '茅台',
-  '三只松鼠',
+const priceRanges = [
+  { label: '100以下', min: 0, max: 100 },
+  { label: '100-500', min: 100, max: 500 },
+  { label: '500-1000', min: 500, max: 1000 },
+  { label: '1000-2000', min: 1000, max: 2000 },
+  { label: '2000以上', min: 2000, max: null },
 ]
 
 const loadProducts = async () => {
@@ -206,6 +229,15 @@ const loadProducts = async () => {
       params.search = searchQuery.value
     }
 
+    // 添加价格筛选
+    if (priceRange.value.min && !isNaN(Number(priceRange.value.min))) {
+      params.min_price = Number(priceRange.value.min)
+    }
+
+    if (priceRange.value.max && !isNaN(Number(priceRange.value.max))) {
+      params.max_price = Number(priceRange.value.max)
+    }
+
     const response = await productAPI.getProducts(params)
     products.value = response.data.products
     pagination.value = response.data.pagination
@@ -225,11 +257,6 @@ const loadCategories = async () => {
   }
 }
 
-const handleSearch = () => {
-  currentPage.value = 1
-  loadProducts()
-}
-
 const applyFilters = () => {
   currentPage.value = 1
   loadProducts()
@@ -237,11 +264,26 @@ const applyFilters = () => {
 
 const resetFilters = () => {
   selectedCategory.value = null
-  selectedBrands.value = []
   priceRange.value = { min: '', max: '' }
   searchQuery.value = ''
   currentPage.value = 1
   loadProducts()
+}
+
+const setPriceRange = (min: number, max: number | null) => {
+  priceRange.value.min = min.toString()
+  priceRange.value.max = max ? max.toString() : ''
+  applyFilters()
+}
+
+const selectAllCategories = () => {
+  selectedCategory.value = null
+  applyFilters()
+}
+
+const selectCategory = (categoryId: number) => {
+  selectedCategory.value = categoryId
+  applyFilters()
 }
 
 // 监听路由变化
@@ -277,7 +319,6 @@ onMounted(() => {
 .products-view {
   min-height: 100vh;
   padding: 2rem 0;
-  background-color: var(--va-background-secondary);
 }
 
 .container {
@@ -288,9 +329,8 @@ onMounted(() => {
 
 .page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .page-title {
@@ -298,15 +338,12 @@ onMounted(() => {
   font-weight: bold;
   color: var(--va-text-primary);
   margin: 0;
+  width: calc(280px + 1rem);
 }
 
-.search-controls {
+.sort-controls {
   display: flex;
   gap: 1rem;
-}
-
-.search-input {
-  width: 300px;
 }
 
 .products-container {
@@ -318,25 +355,119 @@ onMounted(() => {
 .filters-sidebar {
   height: fit-content;
   position: sticky;
-  top: 2rem;
+  top: 5rem;
+}
+
+.filters-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  color: white;
 }
 
 .filter-title {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin: 0 0 1.5rem 0;
-  color: var(--va-text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--va-primary);
+}
+
+.reset-btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .filter-section {
-  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.filter-section:last-of-type {
+  border-bottom: none;
+}
+
+.filter-section-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+  background: rgba(var(--va-background-secondary-rgb), 0.3);
 }
 
 .filter-subtitle {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin: 0 0 1rem 0;
+  margin: 0;
   color: var(--va-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-content {
+  padding: 0.75rem 1.5rem 1.5rem;
+}
+
+/* 分类筛选样式 */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  --va-badge-text-wrapper-border-radius: 50%;
+}
+
+.category-item {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.category-item .va-badge {
+  aspect-ratio: 1 / 1;
+}
+
+.category-item:hover {
+  background: rgba(var(--va-primary-rgb), 0.05);
+  border-color: rgba(var(--va-primary-rgb), 0.2);
+}
+
+.category-item.active {
+  background: rgba(var(--va-primary-rgb), 0.1);
+  border-color: var(--va-primary);
+  color: var(--va-primary);
+}
+
+.category-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 价格筛选样式 */
+.price-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .price-inputs {
@@ -345,14 +476,45 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-.filter-actions {
-  display: flex;
-  flex-direction: column;
+.price-input {
+  flex: 1;
+  min-width: 0; /* 防止flex项目溢出 */
+}
+
+.price-separator {
+  font-weight: 500;
+  color: var(--va-text-secondary);
+  padding: 0;
+  flex-shrink: 0; /* 防止分隔符被压缩 */
+  font-size: 0.85rem;
+}
+
+.price-symbol {
+  font-size: 0.9rem;
+  color: var(--va-text-secondary);
+  font-weight: 500;
+}
+
+.price-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
 }
 
-.apply-btn {
-  width: 100%;
+.price-shortcut {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 0;
+}
+
+.price-shortcut:hover {
+  background: var(--va-primary);
+  color: white;
+  border-color: var(--va-primary);
 }
 
 .products-main {
@@ -361,19 +523,19 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
+.sort-controls {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 1rem;
+}
+
 .products-controls {
   display: flex;
+  flex: 1;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: white;
-  border-radius: 8px;
-}
-
-.sort-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 
 .sort-label {
@@ -433,10 +595,19 @@ onMounted(() => {
 
   .filters-sidebar {
     position: static;
+    order: 2;
   }
 
-  .search-input {
-    width: 250px;
+  .products-main {
+    order: 1;
+  }
+
+  .filter-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .filter-title {
+    font-size: 1.1rem;
   }
 }
 
@@ -447,10 +618,6 @@ onMounted(() => {
     align-items: stretch;
   }
 
-  .search-input {
-    width: 100%;
-  }
-
   .products-controls {
     flex-direction: column;
     gap: 1rem;
@@ -459,6 +626,55 @@ onMounted(() => {
 
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .filters-container {
+    border-radius: 12px;
+  }
+
+  .filter-content {
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  .filter-section-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+
+  .price-shortcuts {
+    grid-template-columns: 1fr;
+  }
+
+  .category-item {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+
+  .products-container {
+    gap: 1rem;
+  }
+
+  .filter-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .reset-btn {
+    align-self: flex-end;
+  }
+
+  .price-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .price-separator {
+    display: none;
   }
 }
 </style>
