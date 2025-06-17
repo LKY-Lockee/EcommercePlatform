@@ -39,12 +39,12 @@
       </div>
 
       <div class="product-actions">
-        <va-button size="small" outline @click.stop="addToCart" :disabled="product.stock === 0">
+        <va-button size="medium" outline @click.stop="addToCart" :disabled="product.stock === 0">
           <va-icon name="shopping_cart" size="small" />
           加入购物车
         </va-button>
         <va-button
-          size="small"
+          size="medium"
           color="primary"
           @click.stop="buyNow"
           :disabled="product.stock === 0"
@@ -105,57 +105,81 @@ const buyNow = () => {
 .product-card {
   height: 100%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--va-primary);
 }
 
 .product-image-container {
   position: relative;
   padding: 0;
-  height: 250px;
+  height: 260px;
   overflow: hidden;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 .product-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  filter: brightness(1.05);
 }
 
 .discount-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: linear-gradient(45deg, #ff6b6b, #ff5252);
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
   color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  backdrop-filter: blur(10px);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .product-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 20px;
+  background: white;
 }
 
 .product-name {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 12px 0;
   line-height: 1.4;
   color: var(--va-text-primary);
   display: -webkit-box;
@@ -163,70 +187,213 @@ const buyNow = () => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.3s ease;
+  min-height: 2.8rem;
+}
+
+.product-card:hover .product-name {
+  color: var(--va-primary);
 }
 
 .product-rating {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .rating-count {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--va-text-secondary);
+  font-weight: 500;
 }
 
 .product-price {
-  margin-bottom: 0.75rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .current-price {
-  font-size: 1.3rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #e53e3e;
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .original-price {
   font-size: 1rem;
   color: var(--va-text-secondary);
   text-decoration: line-through;
-  margin-left: 0.5rem;
+  font-weight: 500;
+  opacity: 0.7;
 }
 
 .product-stats {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--va-text-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(var(--va-primary-rgb), 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--va-primary-rgb), 0.1);
+}
+
+.sales-count,
+.stock-count {
+  font-weight: 500;
 }
 
 .product-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   margin-top: auto;
 }
 
 .product-actions .va-button {
   flex: 1;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.product-actions .va-button:first-child {
+  background: transparent;
+  color: var(--va-primary);
+}
+
+.product-actions .va-button:first-child:hover {
+  background: var(--va-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--va-primary-rgb), 0.3);
+}
+
+.product-actions .va-button:last-child {
+  background: linear-gradient(135deg, var(--va-primary) 0%, var(--va-primary-dark) 100%);
+  border: none;
+  color: white;
+}
+
+.product-actions .va-button:last-child:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--va-primary-rgb), 0.4);
+}
+
+.product-actions .va-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 库存不足时的样式 */
+.product-card:has(.va-button:disabled) {
+  position: relative;
+}
+
+.product-card:has(.va-button:disabled)::after {
+  content: '暂时缺货';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.product-card:has(.va-button:disabled) .product-image {
+  filter: grayscale(50%) brightness(0.8);
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
   .product-image-container {
-    height: 200px;
+    height: 220px;
+  }
+
+  .product-info {
+    padding: 16px;
   }
 
   .product-name {
     font-size: 1rem;
+    min-height: 2.4rem;
   }
 
   .current-price {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 
   .product-actions {
     flex-direction: column;
+    gap: 8px;
   }
+
+  .product-stats {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image-container {
+    height: 200px;
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .current-price {
+    font-size: 1.125rem;
+  }
+
+  .discount-badge {
+    top: 8px;
+    left: 8px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+}
+
+/* 加载动画 */
+.product-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 悬停时的微动画 */
+.product-card:hover .discount-badge {
+  animation-play-state: paused;
+  transform: scale(1.1);
+}
+
+.product-card:hover .product-stats {
+  background: rgba(var(--va-primary-rgb), 0.1);
+  border-color: rgba(var(--va-primary-rgb), 0.2);
 }
 </style>

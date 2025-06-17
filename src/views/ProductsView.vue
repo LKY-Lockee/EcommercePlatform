@@ -5,8 +5,8 @@
       <div class="page-header">
         <h1 class="page-title">商品列表</h1>
         <div class="sort-controls">
-          <!-- 排序 -->
           <div class="products-controls">
+            <!-- 排序 -->
             <div class="sort-controls">
               <span class="sort-label">排序：</span>
               <va-select
@@ -19,10 +19,7 @@
                 @update:model-value="loadProducts"
               />
             </div>
-
-            <div class="view-controls">
-              <span class="results-count"> 共 {{ pagination.total }} 件商品 </span>
-            </div>
+            <span class="results-count"> 共 {{ pagination.total }} 件商品 </span>
           </div>
         </div>
       </div>
@@ -339,11 +336,6 @@ onMounted(() => {
   color: var(--va-text-primary);
   margin: 0;
   width: calc(280px + 1rem);
-}
-
-.sort-controls {
-  display: flex;
-  gap: 1rem;
 }
 
 .products-container {
