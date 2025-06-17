@@ -22,9 +22,16 @@ const cartStore = useCartStore()
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
-onMounted(() => {
-  userStore.initUser()
-  cartStore.loadFromLocalStorage()
+onMounted(async () => {
+  await userStore.initUser()
+  if (userStore.isLoggedIn) {
+    // 先同步本地购物车到服务端
+    await cartStore.syncLocalCartToServer()
+    // 然后获取服务端购物车
+    await cartStore.fetchCart()
+  } else {
+    cartStore.loadFromLocalStorage()
+  }
 })
 </script>
 

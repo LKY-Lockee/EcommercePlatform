@@ -7,6 +7,7 @@ import categoriesRouter from './routes/categories'
 import productsRouter from './routes/products'
 import cartRouter from './routes/cart'
 import ordersRouter from './routes/orders'
+import addressesRouter from './routes/addresses'
 import adminRouter from './routes/admin'
 import bannersRouter from './routes/banners'
 
@@ -29,6 +30,7 @@ app.use('/api/categories', categoriesRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/orders', ordersRouter)
+app.use('/api/addresses', addressesRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/banners', bannersRouter)
 

@@ -10,17 +10,23 @@
 
     <!-- 地址列表 -->
     <div class="addresses-list">
-      <div v-if="addresses.length === 0" class="empty-state">
+      <div v-if="loading" class="loading-state">
+        <va-progress-circle indeterminate />
+        <p>加载中...</p>
+      </div>
+
+      <div v-else-if="addresses.length === 0" class="empty-state">
         <va-icon name="location_on" size="3rem" color="secondary" />
         <h3>暂无收货地址</h3>
         <p>添加您的第一个收货地址</p>
       </div>
 
       <va-card
+        v-else
         v-for="address in addresses"
         :key="address.id"
         class="address-card"
-        :class="{ 'default-address': address.isDefault }"
+        :class="{ 'default-address': address.is_default }"
       >
         <va-card-content>
           <div class="address-header">
@@ -29,11 +35,19 @@
                 <span class="contact-name">{{ address.name }}</span>
                 <span class="contact-phone">{{ address.phone }}</span>
               </div>
-              <va-chip v-if="address.isDefault" text="默认" color="primary" size="small" />
+              <va-chip v-if="address.is_default" color="primary" size="small">
+                默认
+              </va-chip>
             </div>
             <div class="address-actions">
               <va-button flat size="small" @click="editAddress(address)">编辑</va-button>
-              <va-button flat size="small" color="danger" @click="deleteAddress(address.id)">
+              <va-button
+                flat
+                size="small"
+                color="danger"
+                :loading="deleteLoading === address.id"
+                @click="handleDeleteAddress(address.id)"
+              >
                 删除
               </va-button>
             </div>
@@ -43,8 +57,13 @@
             {{ address.province }} {{ address.city }} {{ address.district }} {{ address.detail }}
           </div>
 
-          <div v-if="!address.isDefault" class="address-footer">
-            <va-button flat size="small" @click="setDefaultAddress(address.id)">
+          <div v-if="!address.is_default" class="address-footer">
+            <va-button
+              flat
+              size="small"
+              :loading="defaultLoading === address.id"
+              @click="handleSetDefaultAddress(address.id)"
+            >
               设为默认
             </va-button>
           </div>
@@ -53,79 +72,111 @@
     </div>
 
     <!-- 添加/编辑地址对话框 -->
-    <va-modal
-      v-model="showAddDialog"
-      title="添加收货地址"
-      size="medium"
-      @ok="saveAddress"
-      @cancel="resetForm"
-    >
-      <va-form>
-        <div class="form-grid">
-          <va-input v-model="addressForm.name" label="收货人姓名" :rules="[required]" outline />
-          <va-input
-            v-model="addressForm.phone"
-            label="手机号"
-            :rules="[required, phoneRule]"
-            outline
-          />
+    <va-modal v-model="showAddDialog" size="medium" hide-default-actions>
+      <template #header>
+        <div class="modal-header">
+          <h3 class="modal-title">{{ isEditing ? '编辑收货地址' : '添加收货地址' }}</h3>
         </div>
+      </template>
 
-        <div class="form-grid">
-          <va-select
-            v-model="addressForm.province"
-            label="省份"
-            :options="provinces"
+      <div class="modal-content">
+        <va-form ref="formRef">
+          <div class="form-grid">
+            <va-input v-model="addressForm.name" label="收货人姓名" :rules="[required]" outline />
+            <va-input
+              v-model="addressForm.phone"
+              label="手机号"
+              :rules="[required, phoneRule]"
+              outline
+            />
+          </div>
+
+          <div class="form-grid">
+            <va-select
+              v-model="addressForm.province"
+              label="省份"
+              :options="provinces"
+              :rules="[required]"
+              outline
+              @update:model-value="onProvinceChange"
+            />
+            <va-select
+              v-model="addressForm.city"
+              label="城市"
+              :options="cities"
+              :rules="[required]"
+              outline
+              @update:model-value="onCityChange"
+            />
+            <va-select
+              v-model="addressForm.district"
+              label="区县"
+              :options="districts"
+              :rules="[required]"
+              outline
+            />
+          </div>
+
+          <va-textarea
+            v-model="addressForm.detail"
+            label="详细地址"
             :rules="[required]"
             outline
+            :autosize="true"
+            placeholder="请输入详细地址，如街道、门牌号等"
           />
-          <va-select
-            v-model="addressForm.city"
-            label="城市"
-            :options="cities"
-            :rules="[required]"
-            outline
-          />
-          <va-select
-            v-model="addressForm.district"
-            label="区县"
-            :options="districts"
-            :rules="[required]"
-            outline
-          />
+
+          <div class="form-footer">
+            <va-checkbox v-model="addressForm.is_default" label="设为默认地址" />
+          </div>
+        </va-form>
+      </div>
+
+      <template #footer>
+        <div class="modal-footer">
+          <va-button @click="resetForm">取消</va-button>
+          <va-button
+            color="primary"
+            :loading="saveLoading"
+            :disabled="!isFormValid"
+            @click="handleSaveAddress"
+          >
+            {{ isEditing ? '更新' : '保存' }}
+          </va-button>
         </div>
-
-        <va-textarea
-          v-model="addressForm.detail"
-          label="详细地址"
-          :rules="[required]"
-          outline
-          placeholder="请输入详细地址，如街道、门牌号等"
-        />
-
-        <va-checkbox v-model="addressForm.isDefault" label="设为默认地址" />
-      </va-form>
+      </template>
     </va-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-
-interface Address {
-  id: number
-  name: string
-  phone: string
-  province: string
-  city: string
-  district: string
-  detail: string
-  isDefault: boolean
-}
+import { ref, onMounted, computed } from 'vue'
+import {
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress as deleteAddressAPI,
+  setDefaultAddress as setDefaultAddressAPI,
+  getProvinces,
+  getCitiesByProvince,
+  getDistrictsByCity,
+  type Address,
+  type CreateAddressData,
+} from '@/api/address'
 
 const showAddDialog = ref(false)
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
+const loading = ref(false)
+const saveLoading = ref(false)
+const deleteLoading = ref<number | null>(null)
+const defaultLoading = ref<number | null>(null)
+const formRef = ref()
+
+const addresses = ref<Address[]>([])
+const provinces = ref<string[]>([])
+const cities = ref<string[]>([])
+const districts = ref<string[]>([])
 
 const addressForm = ref({
   name: '',
@@ -134,37 +185,8 @@ const addressForm = ref({
   city: '',
   district: '',
   detail: '',
-  isDefault: false,
+  is_default: false,
 })
-
-// 模拟地址数据
-const addresses = ref<Address[]>([
-  {
-    id: 1,
-    name: '张三',
-    phone: '13800138000',
-    province: '北京市',
-    city: '北京市',
-    district: '朝阳区',
-    detail: '三里屯街道123号',
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: '李四',
-    phone: '13900139000',
-    province: '上海市',
-    city: '上海市',
-    district: '浦东新区',
-    detail: '陆家嘴金融中心456号',
-    isDefault: false,
-  },
-])
-
-// 模拟省市区数据
-const provinces = ['北京市', '上海市', '广东省', '浙江省', '江苏省']
-const cities = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '南京市']
-const districts = ['朝阳区', '海淀区', '浦东新区', '黄浦区', '天河区', '福田区']
 
 // 验证规则
 const required = (value: unknown) => !!value || '此字段是必填的'
@@ -174,6 +196,77 @@ const phoneRule = (value: string) => {
   return phonePattern.test(value) || '请输入有效的手机号'
 }
 
+// 计算表单是否有效
+const isFormValid = computed(() => {
+  const form = addressForm.value
+  return !!(
+    form.name &&
+    form.phone &&
+    phoneRule(form.phone) === true &&
+    form.province &&
+    form.city &&
+    form.district &&
+    form.detail
+  )
+})
+
+// 加载地址列表
+const loadAddresses = async () => {
+  loading.value = true
+  try {
+    console.log('正在加载地址列表...')
+    const response = await getAddresses()
+    console.log('地址API响应:', response.data)
+    addresses.value = response.data || []
+    console.log('已加载地址数量:', addresses.value.length)
+  } catch (error) {
+    console.error('加载地址列表失败:', error)
+    addresses.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载省份列表
+const loadProvinces = async () => {
+  try {
+    provinces.value = await getProvinces()
+  } catch (error) {
+    console.error('加载省份列表失败:', error)
+  }
+}
+
+// 省份改变时加载城市
+const onProvinceChange = async (province: string) => {
+  addressForm.value.city = ''
+  addressForm.value.district = ''
+  cities.value = []
+  districts.value = []
+
+  if (province) {
+    try {
+      cities.value = await getCitiesByProvince(province)
+    } catch (error) {
+      console.error('加载城市列表失败:', error)
+    }
+  }
+}
+
+// 城市改变时加载区县
+const onCityChange = async (city: string) => {
+  addressForm.value.district = ''
+  districts.value = []
+
+  if (city) {
+    try {
+      districts.value = await getDistrictsByCity(city)
+    } catch (error) {
+      console.error('加载区县列表失败:', error)
+    }
+  }
+}
+
+// 重置表单
 const resetForm = () => {
   addressForm.value = {
     name: '',
@@ -182,60 +275,107 @@ const resetForm = () => {
     city: '',
     district: '',
     detail: '',
-    isDefault: false,
+    is_default: false,
   }
+  cities.value = []
+  districts.value = []
   isEditing.value = false
   editingId.value = null
+  showAddDialog.value = false
 }
 
-const editAddress = (address: Address) => {
-  addressForm.value = { ...address }
+// 编辑地址
+const editAddress = async (address: Address) => {
+  addressForm.value = {
+    name: address.name,
+    phone: address.phone,
+    province: address.province,
+    city: address.city,
+    district: address.district,
+    detail: address.detail,
+    is_default: address.is_default,
+  }
+
+  // 加载对应的城市和区县
+  if (address.province) {
+    cities.value = await getCitiesByProvince(address.province)
+  }
+  if (address.city) {
+    districts.value = await getDistrictsByCity(address.city)
+  }
+
   isEditing.value = true
   editingId.value = address.id
   showAddDialog.value = true
 }
 
-const saveAddress = () => {
-  if (isEditing.value && editingId.value) {
-    const index = addresses.value.findIndex((addr) => addr.id === editingId.value)
-    if (index > -1) {
-      addresses.value[index] = { ...addressForm.value, id: editingId.value }
+// 保存地址
+const handleSaveAddress = async () => {
+  if (!isFormValid.value) return
+
+  saveLoading.value = true
+  try {
+    const addressData: CreateAddressData = {
+      name: addressForm.value.name,
+      phone: addressForm.value.phone,
+      province: addressForm.value.province,
+      city: addressForm.value.city,
+      district: addressForm.value.district,
+      detail: addressForm.value.detail,
+      is_default: addressForm.value.is_default,
     }
-  } else {
-    const newAddress: Address = {
-      ...addressForm.value,
-      id: Date.now(),
+
+    if (isEditing.value && editingId.value) {
+      console.log('更新地址:', editingId.value, addressData)
+      await updateAddress(editingId.value, addressData)
+      console.log('地址更新成功')
+    } else {
+      console.log('创建地址:', addressData)
+      await createAddress(addressData)
+      console.log('地址创建成功')
     }
-    addresses.value.push(newAddress)
-  }
 
-  if (addressForm.value.isDefault) {
-    addresses.value.forEach((addr) => {
-      if (addr.id !== editingId.value) {
-        addr.isDefault = false
-      }
-    })
-  }
-
-  showAddDialog.value = false
-  resetForm()
-}
-
-const deleteAddress = (addressId: number) => {
-  const index = addresses.value.findIndex((addr) => addr.id === addressId)
-  if (index > -1) {
-    addresses.value.splice(index, 1)
+    await loadAddresses()
+    resetForm()
+  } catch (error) {
+    console.error('保存地址失败:', error)
+  } finally {
+    saveLoading.value = false
   }
 }
 
-const setDefaultAddress = (addressId: number) => {
-  addresses.value.forEach((addr) => {
-    addr.isDefault = addr.id === addressId
-  })
+// 删除地址
+const handleDeleteAddress = async (addressId: number) => {
+  deleteLoading.value = addressId
+  try {
+    console.log('删除地址:', addressId)
+    await deleteAddressAPI(addressId)
+    console.log('地址删除成功')
+    await loadAddresses()
+  } catch (error) {
+    console.error('删除地址失败:', error)
+  } finally {
+    deleteLoading.value = null
+  }
 }
 
-onMounted(() => {
-  // 初始化数据
+// 设置默认地址
+const handleSetDefaultAddress = async (addressId: number) => {
+  defaultLoading.value = addressId
+  try {
+    console.log('设置默认地址:', addressId)
+    await setDefaultAddressAPI(addressId)
+    console.log('默认地址设置成功')
+    await loadAddresses()
+  } catch (error) {
+    console.error('设置默认地址失败:', error)
+  } finally {
+    defaultLoading.value = null
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([loadAddresses(), loadProvinces()])
 })
 </script>
 
@@ -252,9 +392,8 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
-  margin: 0;
   color: var(--va-text-primary);
 }
 
@@ -331,12 +470,10 @@ onMounted(() => {
 .address-detail {
   color: var(--va-text-primary);
   line-height: 1.5;
-  margin-bottom: 1rem;
 }
 
 .address-footer {
   padding-top: 1rem;
-  border-top: 1px solid var(--va-background-border);
 }
 
 .form-grid {
@@ -344,6 +481,34 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* 模态框样式优化 */
+.modal-header {
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+  margin: 0;
+}
+
+.modal-content {
+  padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+.form-footer {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -364,6 +529,28 @@ onMounted(() => {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-header {
+    padding: 1rem 1rem 0 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .modal-footer .va-button {
+    width: 100%;
   }
 }
 </style>

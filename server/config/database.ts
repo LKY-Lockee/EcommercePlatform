@@ -441,7 +441,7 @@ const seedDefaultProducts = async () => {
       ]
 
       for (const product of products) {
-        await connection.execute(
+        const [result] = await connection.execute(
           `INSERT INTO products (name, description, price, original_price, stock, category_id, brand, sku, featured, sales, rating, rating_count, status)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
           [
@@ -458,6 +458,16 @@ const seedDefaultProducts = async () => {
             product.rating,
             product.rating_count,
           ],
+        )
+
+        // 为商品添加主图片
+        const insertResult = result as { insertId: number }
+        const productId = insertResult.insertId
+        const imageUrl = `https://via.placeholder.com/400x400?text=${encodeURIComponent(product.name)}`
+
+        await connection.execute(
+          `INSERT INTO product_images (product_id, image_url, is_primary, sort_order) VALUES (?, ?, 1, 0)`,
+          [productId, imageUrl],
         )
       }
 

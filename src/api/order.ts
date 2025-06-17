@@ -55,3 +55,8 @@ export const cancelOrder = (id: number) => {
 export const payOrder = (id: number) => {
   return request.put(`/orders/${id}/pay`)
 }
+
+// 确认收货
+export const confirmOrder = (id: number) => {
+  return request.put(`/orders/${id}/confirm`)
+}

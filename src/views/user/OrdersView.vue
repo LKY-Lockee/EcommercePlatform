@@ -21,20 +21,20 @@
         <p>加载中...</p>
       </div>
 
-      <div v-else-if="orders.length === 0" class="empty-state">
+      <div v-else-if="filteredOrders.length === 0" class="empty-state">
         <va-icon name="receipt_long" size="3rem" color="secondary" />
         <h3>暂无订单</h3>
         <p>快去选购您喜欢的商品吧</p>
         <va-button @click="$router.push('/products')">开始购物</va-button>
       </div>
 
-      <va-card v-else v-for="order in orders" :key="order.id" class="order-card">
+      <va-card v-else v-for="order in filteredOrders" :key="order.id" class="order-card">
         <va-card-content>
           <!-- 订单头部 -->
           <div class="order-header">
             <div class="order-info">
-              <span class="order-number">订单号：{{ order.orderNumber }}</span>
-              <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+              <span class="order-number">订单号：{{ order.order_number }}</span>
+              <span class="order-date">{{ formatDate(order.created_at) }}</span>
             </div>
             <va-chip :color="getStatusColor(order.status)" :text="getStatusText(order.status)" />
           </div>
@@ -45,15 +45,16 @@
           <div class="order-items">
             <div v-for="item in order.items" :key="item.id" class="order-item">
               <img
-                :src="item.productImage || 'https://via.placeholder.com/80x80'"
-                :alt="item.productName"
+                :src="getProductImage(item.product_id) || 'https://via.placeholder.com/80x80'"
+                :alt="item.product_name"
                 class="item-image"
               />
               <div class="item-info">
-                <h4 class="item-name">{{ item.productName }}</h4>
-                <p class="item-price">¥{{ item.productPrice.toFixed(2) }} x {{ item.quantity }}</p>
+                <h4 class="item-name">{{ item.product_name }}</h4>
+                <div class="item-price">¥{{ formatPrice(item.product_price) }}</div>
+                <div class="item-quantity">数量：{{ item.quantity }}</div>
               </div>
-              <div class="item-total">¥{{ item.subtotal.toFixed(2) }}</div>
+              <div class="item-total">¥{{ formatPrice(item.subtotal) }}</div>
             </div>
           </div>
 
@@ -62,122 +63,84 @@
           <!-- 订单底部 -->
           <div class="order-footer">
             <div class="order-total">
-              <span class="total-label">订单总额：</span>
-              <span class="total-amount">¥{{ order.totalAmount.toFixed(2) }}</span>
+              总计：<span class="total-amount">¥{{ formatPrice(order.total_amount) }}</span>
             </div>
-
             <div class="order-actions">
-              <va-button v-if="order.status === 'pending'" size="small" @click="payOrder(order)">
+              <va-button
+                v-if="order.status === 'pending'"
+                size="small"
+                :loading="actionLoading === order.id"
+                @click="handlePayOrder(order)"
+              >
                 立即付款
               </va-button>
               <va-button
                 v-if="order.status === 'shipped'"
                 size="small"
-                @click="confirmOrder(order)"
+                :loading="actionLoading === order.id"
+                @click="handleConfirmOrder(order)"
               >
                 确认收货
               </va-button>
               <va-button
                 v-if="order.status === 'pending'"
-                size="small"
                 flat
+                size="small"
                 color="danger"
-                @click="cancelOrder(order)"
+                :loading="actionLoading === order.id"
+                @click="handleCancelOrder(order)"
               >
                 取消订单
               </va-button>
-              <va-button size="small" flat @click="viewOrderDetail(order)">查看详情</va-button>
             </div>
           </div>
         </va-card-content>
       </va-card>
-    </div>
 
-    <!-- 分页 -->
-    <div v-if="totalPages > 1" class="pagination-container">
-      <va-pagination
-        v-model="currentPage"
-        :pages="totalPages"
-        :visible-pages="5"
-        @update:model-value="loadOrders"
-      />
+      <!-- 分页 -->
+      <div v-if="totalPages > 1" class="pagination-container">
+        <va-pagination
+          v-model="currentPage"
+          :pages="totalPages"
+          :visible-pages="5"
+          @update:model-value="loadOrders"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
+import {
+  getOrders,
+  cancelOrder as cancelOrderAPI,
+  payOrder as payOrderAPI,
+  confirmOrder as confirmOrderAPI,
+  type Order,
+} from '@/api/order'
+import { useCartStore } from '@/stores/cart'
 
-interface OrderItem {
-  id: number
-  productName: string
-  productImage: string
-  productPrice: number
-  quantity: number
-  subtotal: number
-}
-
-interface Order {
-  id: number
-  orderNumber: string
-  status: string
-  totalAmount: number
-  createdAt: string
-  items: OrderItem[]
-}
+const cartStore = useCartStore()
 
 const activeTab = ref(0)
 const loading = ref(false)
+const actionLoading = ref<number | null>(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
+const orders = ref<Order[]>([])
 
-// 模拟订单数据
-const orders = ref([
-  {
-    id: 1,
-    orderNumber: 'ORD20240616001',
-    status: 'pending',
-    totalAmount: 2999.0,
-    createdAt: '2024-06-16T10:30:00',
-    items: [
-      {
-        id: 1,
-        productName: 'Apple iPhone 15 Pro Max',
-        productImage: 'https://via.placeholder.com/80x80?text=iPhone',
-        productPrice: 2999.0,
-        quantity: 1,
-        subtotal: 2999.0,
-      },
-    ],
-  },
-  {
-    id: 2,
-    orderNumber: 'ORD20240615002',
-    status: 'shipped',
-    totalAmount: 1499.0,
-    createdAt: '2024-06-15T14:20:00',
-    items: [
-      {
-        id: 2,
-        productName: 'Nike Air Jordan 1',
-        productImage: 'https://via.placeholder.com/80x80?text=Jordan',
-        productPrice: 1299.0,
-        quantity: 1,
-        subtotal: 1299.0,
-      },
-      {
-        id: 3,
-        productName: '李宁运动套装',
-        productImage: 'https://via.placeholder.com/80x80?text=LiNing',
-        productPrice: 399.0,
-        quantity: 1,
-        subtotal: 399.0,
-      },
-    ],
-  },
-])
-
+// 订单状态映射
 const statusMap = {
+  0: '', // 全部订单
+  1: 'pending', // 待付款
+  2: 'paid', // 待发货
+  3: 'shipped', // 待收货
+  4: 'delivered', // 已完成
+  5: 'cancelled', // 已取消
+}
+
+const statusDisplayMap = {
   pending: { text: '待付款', color: 'warning' },
   paid: { text: '待发货', color: 'info' },
   shipped: { text: '待收货', color: 'primary' },
@@ -185,41 +148,123 @@ const statusMap = {
   cancelled: { text: '已取消', color: 'danger' },
 }
 
+// 根据选中的标签过滤订单
+const filteredOrders = computed(() => {
+  const targetStatus = statusMap[activeTab.value as keyof typeof statusMap]
+  if (!targetStatus) {
+    return orders.value
+  }
+  return orders.value.filter((order) => order.status === targetStatus)
+})
+
+// 加载订单列表
+const loadOrders = async (page = 1) => {
+  loading.value = true
+  try {
+    console.log('正在加载订单列表...')
+    const response = await getOrders()
+    console.log('订单API响应:', response.data)
+
+    orders.value = response.data || []
+    currentPage.value = page
+    totalPages.value = 1
+
+    console.log('已加载订单数量:', orders.value.length)
+  } catch (error) {
+    console.error('加载订单失败:', error)
+    orders.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
 const getStatusText = (status: string) => {
-  return statusMap[status as keyof typeof statusMap]?.text || status
+  return statusDisplayMap[status as keyof typeof statusDisplayMap]?.text || status
 }
 
 const getStatusColor = (status: string) => {
-  return statusMap[status as keyof typeof statusMap]?.color || 'secondary'
+  return statusDisplayMap[status as keyof typeof statusDisplayMap]?.color || 'secondary'
 }
 
-const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN')
-
-const loadOrders = () => {
-  loading.value = true
-  setTimeout(() => (loading.value = false), 1000)
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('zh-CN')
 }
 
-const payOrder = (order: Order) => {
-  console.log('支付订单:', order.id)
+const formatPrice = (price: number | string) => {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price
+  return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
-const confirmOrder = (order: Order) => {
-  console.log('确认收货:', order.id)
-  order.status = 'delivered'
+const getProductImage = (productId: number) => {
+  // 这里可以根据产品ID获取图片，暂时返回占位图
+  return `https://via.placeholder.com/80x80?text=Product${productId}`
 }
 
-const cancelOrder = (order: Order) => {
-  console.log('取消订单:', order.id)
-  order.status = 'cancelled'
+const handlePayOrder = async (order: Order) => {
+  try {
+    actionLoading.value = order.id
+    console.log('正在支付订单:', order.id)
+
+    await payOrderAPI(order.id)
+    console.log('支付成功')
+
+    // 支付成功后刷新购物车状态（服务器已清空购物车）
+    await cartStore.fetchCart()
+
+    // 更新订单状态
+    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
+    if (orderIndex > -1) {
+      orders.value[orderIndex].status = 'paid'
+    }
+  } catch (error) {
+    console.error('支付订单失败:', error)
+  } finally {
+    actionLoading.value = null
+  }
 }
 
-const viewOrderDetail = (order: Order) => {
-  console.log('查看订单详情:', order.id)
+const handleConfirmOrder = async (order: Order) => {
+  try {
+    actionLoading.value = order.id
+    console.log('确认收货:', order.id)
+
+    await confirmOrderAPI(order.id)
+    console.log('确认收货成功')
+
+    // 更新订单状态
+    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
+    if (orderIndex > -1) {
+      orders.value[orderIndex].status = 'delivered'
+    }
+  } catch (error) {
+    console.error('确认收货失败:', error)
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+const handleCancelOrder = async (order: Order) => {
+  try {
+    actionLoading.value = order.id
+    console.log('取消订单:', order.id)
+
+    await cancelOrderAPI(order.id)
+    console.log('订单已取消')
+
+    // 更新订单状态
+    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
+    if (orderIndex > -1) {
+      orders.value[orderIndex].status = 'cancelled'
+    }
+  } catch (error) {
+    console.error('取消订单失败:', error)
+  } finally {
+    actionLoading.value = null
+  }
 }
 
 watch(activeTab, () => {
-  loadOrders()
+  console.log('切换订单状态标签:', activeTab.value)
 })
 
 onMounted(() => {
@@ -339,6 +384,7 @@ onMounted(() => {
 .item-price {
   color: var(--va-text-secondary);
   margin: 0;
+  padding-bottom: 10px;
 }
 
 .item-total {

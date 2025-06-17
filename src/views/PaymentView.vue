@@ -73,9 +73,11 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getOrderDetail, payOrder, type Order } from '@/api/order'
+import { useCartStore } from '@/stores/cart'
 
 const route = useRoute()
 const router = useRouter()
+const cartStore = useCartStore()
 
 const order = ref<Order | null>(null)
 const selectedMethod = ref('alipay')
@@ -109,6 +111,9 @@ const handlePay = async () => {
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     await payOrder(order.value.id)
+
+    // 支付成功后刷新购物车状态（服务器已清空购物车）
+    await cartStore.fetchCart()
 
     showSuccessDialog.value = true
   } catch (error) {

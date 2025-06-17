@@ -96,8 +96,8 @@ router.post(
           ])
         }
 
-        // 清空购物车
-        await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user!.id])
+        // 不要在创建订单时清空购物车，等支付成功后再清空
+        // await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user!.id])
 
         await connection.commit()
         connection.release()
@@ -126,7 +126,8 @@ router.post(
 // 获取用户订单列表
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const [rows] = await pool.execute(
+    // 获取订单基本信息
+    const [orderRows] = await pool.execute(
       `
       SELECT
         id,
@@ -144,7 +145,31 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
       [req.user!.id],
     )
 
-    res.json(rows)
+    const orders = orderRows as Array<{
+      id: number
+      order_number: string
+      status: string
+      total_amount: number
+      shipping_address: string
+      payment_method: string
+      payment_status: string
+      created_at: string
+    }>
+
+    // 为每个订单获取订单项目
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        const [itemRows] = await pool.execute('SELECT * FROM order_items WHERE order_id = ?', [
+          order.id,
+        ])
+        return {
+          ...order,
+          items: itemRows,
+        }
+      }),
+    )
+
+    res.json(ordersWithItems)
   } catch (error) {
     console.error('获取订单列表失败:', error)
     res.status(500).json({ message: '获取订单列表失败' })
@@ -282,10 +307,50 @@ router.put(
         id,
       ])
 
+      // 支付成功后清空购物车
+      await pool.execute('DELETE FROM cart WHERE user_id = ?', [req.user!.id])
+
       res.json({ message: '支付成功' })
     } catch (error) {
       console.error('支付失败:', error)
       res.status(500).json({ message: '支付失败' })
+    }
+  },
+)
+
+// 确认收货
+router.put(
+  '/:id/confirm',
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params
+
+      // 检查订单状态
+      const [orderRows] = await pool.execute(
+        'SELECT status FROM orders WHERE id = ? AND user_id = ?',
+        [id, req.user!.id],
+      )
+
+      const orders = orderRows as Array<{ status: string }>
+      if (orders.length === 0) {
+        res.status(404).json({ message: '订单不存在' })
+        return
+      }
+
+      const order = orders[0]
+      if (order.status !== 'shipped') {
+        res.status(400).json({ message: '只能确认收货已发货的订单' })
+        return
+      }
+
+      // 更新订单状态
+      await pool.execute('UPDATE orders SET status = ? WHERE id = ?', ['delivered', id])
+
+      res.json({ message: '确认收货成功' })
+    } catch (error) {
+      console.error('确认收货失败:', error)
+      res.status(500).json({ message: '确认收货失败' })
     }
   },
 )

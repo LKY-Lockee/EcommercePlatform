@@ -71,7 +71,7 @@
                     :model-value="item.quantity"
                     :min="1"
                     :max="item.product.stock"
-                    @update:model-value="(value) => cartStore.updateQuantity(item.id, value)"
+                    @update:model-value="(value) => handleUpdateQuantity(item.id, value)"
                   />
                   <span class="stock-info">库存: {{ item.product.stock }}</span>
                 </div>
@@ -83,12 +83,7 @@
                 </div>
 
                 <div class="item-actions">
-                  <va-button
-                    flat
-                    icon="delete"
-                    color="danger"
-                    @click="cartStore.removeFromCart(item.id)"
-                  />
+                  <va-button flat icon="delete" color="danger" @click="handleRemoveItem(item.id)" />
                 </div>
               </div>
             </div>
@@ -153,8 +148,28 @@ const allSelected = computed(
   () => cartStore.items.length > 0 && cartStore.items.every((item) => item.selected),
 )
 
-const handleClearSelected = () => {
-  cartStore.clearSelected()
+const handleClearSelected = async () => {
+  try {
+    await cartStore.clearSelected()
+  } catch (error) {
+    console.error('删除选中商品失败:', error)
+  }
+}
+
+const handleUpdateQuantity = async (itemId: number, quantity: number) => {
+  try {
+    await cartStore.updateQuantity(itemId, quantity)
+  } catch (error) {
+    console.error('更新商品数量失败:', error)
+  }
+}
+
+const handleRemoveItem = async (itemId: number) => {
+  try {
+    await cartStore.removeFromCart(itemId)
+  } catch (error) {
+    console.error('删除商品失败:', error)
+  }
 }
 
 const handleCheckout = () => {

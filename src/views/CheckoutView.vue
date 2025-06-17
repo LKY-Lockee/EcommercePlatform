@@ -1,6 +1,6 @@
 <template>
   <div class="checkout">
-    <va-container>
+    <div>
       <h1 class="page-title">结算</h1>
 
       <va-row :gutter="24">
@@ -95,7 +95,7 @@
           </va-card>
         </va-column>
       </va-row>
-    </va-container>
+    </div>
 
     <!-- 地址选择对话框 -->
     <va-modal v-model="showAddressDialog" title="选择收货地址">
@@ -130,15 +130,25 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 // import { useUserStore } from '@/stores/user'
-import { getCart, type CartItem } from '@/api/cart'
 import { createOrder } from '@/api/order'
-import type { Address } from '@/api/user'
+import { userAPI, type Address } from '@/api/user'
 
 const router = useRouter()
 const cartStore = useCartStore()
 // const userStore = useUserStore()
 
-const cartItems = ref<CartItem[]>([])
+// 从购物车store获取选中的商品，转换为结算页面需要的格式
+const cartItems = computed(() => {
+  return cartStore.selectedItems.map((item) => ({
+    id: item.id,
+    product_id: item.product.id,
+    quantity: item.quantity,
+    name: item.product.name,
+    price: Number(item.product.price),
+    image_url: item.product.primary_image,
+    total_price: Number(item.product.price) * item.quantity,
+  }))
+})
 const addresses = ref<Address[]>([])
 const selectedAddress = ref<Address | null>(null)
 const paymentMethod = ref('alipay')
@@ -168,20 +178,17 @@ const canSubmit = computed(() => {
   return selectedAddress.value && cartItems.value.length > 0 && !submitting.value
 })
 
-const loadCart = async () => {
-  try {
-    const response = await getCart()
-    cartItems.value = response.data
-  } catch (error) {
-    console.error('加载购物车失败:', error)
-  }
-}
-
 const loadAddresses = async () => {
   try {
-    // TODO: 从 API 加载用户地址
-    addresses.value = []
-    // 模拟一些地址数据
+    const response = await userAPI.getAddresses()
+    addresses.value = response.data
+
+    // 默认选择默认地址
+    selectedAddress.value =
+      addresses.value.find((addr) => addr.is_default) || addresses.value[0] || null
+  } catch (error) {
+    console.error('加载地址失败:', error)
+    // 如果获取地址失败，可以提供一个模拟地址供测试
     addresses.value = [
       {
         id: 1,
@@ -196,12 +203,7 @@ const loadAddresses = async () => {
         created_at: new Date().toISOString(),
       },
     ]
-
-    // 默认选择默认地址
-    selectedAddress.value =
-      addresses.value.find((addr) => addr.is_default) || addresses.value[0] || null
-  } catch (error) {
-    console.error('加载地址失败:', error)
+    selectedAddress.value = addresses.value[0] || null
   }
 }
 
@@ -230,10 +232,8 @@ const handleSubmitOrder = async () => {
 
     const response = await createOrder(orderData)
 
-    // 清空购物车
-    cartStore.clearCart()
-
-    // 跳转到支付页面
+    // 不要在这里清空购物车，等支付成功后再清空
+    // 直接跳转到支付页面
     router.push(`/payment/${response.data.order.id}`)
   } catch (error) {
     console.error('创建订单失败:', error)
@@ -250,7 +250,6 @@ const formatPrice = (price: number) => {
 }
 
 onMounted(() => {
-  loadCart()
   loadAddresses()
 })
 </script>

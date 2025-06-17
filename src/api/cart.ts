@@ -35,3 +35,12 @@ export const removeFromCart = (id: number) => {
 export const clearCart = () => {
   return request.delete('/cart')
 }
+
+// 导出统一对象
+export const cartAPI = {
+  getCart,
+  addToCart,
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+}

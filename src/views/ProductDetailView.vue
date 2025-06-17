@@ -181,14 +181,19 @@ const loadProduct = async () => {
   }
 }
 
-const addToCart = () => {
+const addToCart = async () => {
   if (!product.value) return
 
-  cartStore.addToCart(product.value, quantity.value)
-  // 这里可以添加成功提示
+  try {
+    await cartStore.addToCart(product.value, quantity.value)
+    // 这里可以添加成功提示
+    console.log('添加到购物车成功')
+  } catch (error) {
+    console.error('添加到购物车失败:', error)
+  }
 }
 
-const buyNow = () => {
+const buyNow = async () => {
   if (!product.value) return
 
   if (!userStore.isLoggedIn) {
@@ -196,8 +201,12 @@ const buyNow = () => {
     return
   }
 
-  cartStore.addToCart(product.value, quantity.value)
-  router.push('/checkout')
+  try {
+    await cartStore.addToCart(product.value, quantity.value)
+    router.push('/checkout')
+  } catch (error) {
+    console.error('购买失败:', error)
+  }
 }
 
 onMounted(() => {

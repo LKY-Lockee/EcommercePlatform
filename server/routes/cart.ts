@@ -17,17 +17,18 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         c.quantity,
         p.name,
         p.price,
-        p.image_url,
         p.stock,
-        (c.quantity * p.price) as total_price
+        (c.quantity * p.price) as total_price,
+        pi.image_url
       FROM cart c
       JOIN products p ON c.product_id = p.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE c.user_id = ?
     `,
       [req.user!.id],
     )
 
-    await connection.end()
+    connection.release()
     res.json(rows)
   } catch (error) {
     console.error('获取购物车失败:', error)
@@ -54,14 +55,14 @@ router.post('/add', authenticateToken, async (req: AuthRequest, res: Response): 
 
     const products = productRows as Array<{ id: number; stock: number }>
     if (products.length === 0) {
-      await connection.end()
+      connection.release()
       res.status(404).json({ message: '商品不存在' })
       return
     }
 
     const product = products[0]
     if (product.stock < quantity) {
-      await connection.end()
+      connection.release()
       res.status(400).json({ message: '库存不足' })
       return
     }
@@ -79,7 +80,7 @@ router.post('/add', authenticateToken, async (req: AuthRequest, res: Response): 
       const newQuantity = existingItem.quantity + quantity
 
       if (newQuantity > product.stock) {
-        await connection.end()
+        connection.release()
         res.status(400).json({ message: '超出库存数量' })
         return
       }
@@ -96,7 +97,7 @@ router.post('/add', authenticateToken, async (req: AuthRequest, res: Response): 
       )
     }
 
-    await connection.end()
+    connection.release()
     res.json({ message: '添加到购物车成功' })
   } catch (error) {
     console.error('添加购物车失败:', error)
@@ -125,21 +126,21 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 
     const cartItems = cartRows as Array<{ stock: number }>
     if (cartItems.length === 0) {
-      await connection.end()
+      connection.release()
       res.status(404).json({ message: '购物车项不存在' })
       return
     }
 
     const cartItem = cartItems[0]
     if (quantity > cartItem.stock) {
-      await connection.end()
+      connection.release()
       res.status(400).json({ message: '超出库存数量' })
       return
     }
 
     await connection.execute('UPDATE cart SET quantity = ? WHERE id = ?', [quantity, id])
 
-    await connection.end()
+    connection.release()
     res.json({ message: '更新成功' })
   } catch (error) {
     console.error('更新购物车失败:', error)
@@ -158,7 +159,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
       req.user!.id,
     ])
 
-    await connection.end()
+    connection.release()
 
     const deleteResult = result[0] as { affectedRows: number }
     if (deleteResult.affectedRows === 0) {
@@ -180,7 +181,7 @@ router.delete('/', authenticateToken, async (req: AuthRequest, res: Response) =>
 
     await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user!.id])
 
-    await connection.end()
+    connection.release()
     res.json({ message: '购物车已清空' })
   } catch (error) {
     console.error('清空购物车失败:', error)
