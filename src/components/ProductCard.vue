@@ -71,31 +71,20 @@ const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 
-// 格式化价格，确保始终显示为数字
 const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
-  if (isNaN(numPrice)) {
-    return '0.00'
-  }
-  return numPrice.toFixed(2)
+  return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
-const goToDetail = () => {
-  router.push(`/product/${props.product.id}`)
-}
+const goToDetail = () => router.push(`/product/${props.product.id}`)
 
-const addToCart = () => {
-  cartStore.addToCart(props.product, 1)
-  // 可以添加一个提示
-}
+const addToCart = () => cartStore.addToCart(props.product, 1)
 
 const buyNow = () => {
   if (!userStore.isLoggedIn) {
     router.push('/login')
     return
   }
-
-  // 添加到购物车并跳转到结算页面
   cartStore.addToCart(props.product, 1)
   router.push('/checkout')
 }
@@ -295,10 +284,6 @@ const buyNow = () => {
 }
 
 /* 库存不足时的样式 */
-.product-card:has(.va-button:disabled) {
-  position: relative;
-}
-
 .product-card:has(.va-button:disabled)::after {
   content: '暂时缺货';
   position: absolute;
@@ -313,6 +298,10 @@ const buyNow = () => {
   font-size: 0.875rem;
   z-index: 10;
   backdrop-filter: blur(10px);
+}
+
+.product-card:has(.va-button:disabled) {
+  position: relative;
 }
 
 .product-card:has(.va-button:disabled) .product-image {
@@ -371,10 +360,6 @@ const buyNow = () => {
 }
 
 /* 加载动画 */
-.product-card {
-  animation: fadeInUp 0.6s ease-out;
-}
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -384,6 +369,10 @@ const buyNow = () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.product-card {
+  animation: fadeInUp 0.6s ease-out;
 }
 
 /* 悬停时的微动画 */
