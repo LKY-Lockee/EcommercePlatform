@@ -35,24 +35,6 @@
             </div>
           </div>
         </div>
-
-        <div class="section">
-          <h2>联系我们</h2>
-          <div class="contact-info">
-            <div class="contact-item">
-              <va-icon name="phone" color="primary" />
-              <span>客服热线：400-123-4567</span>
-            </div>
-            <div class="contact-item">
-              <va-icon name="email" color="primary" />
-              <span>邮箱：contact@shopmart.com</span>
-            </div>
-            <div class="contact-item">
-              <va-icon name="location_on" color="primary" />
-              <span>地址：上海市浦东新区商业街123号</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -76,7 +58,7 @@
 
 .hero-section {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .page-title {

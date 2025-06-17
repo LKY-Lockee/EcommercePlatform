@@ -263,7 +263,6 @@ onMounted(() => {
 <style scoped>
 .checkout {
   min-height: 100vh;
-  background-color: #f8f9fa;
   padding: 2rem 0;
 }
 
