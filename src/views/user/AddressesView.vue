@@ -10,7 +10,7 @@
 
     <!-- 地址列表 -->
     <div class="addresses-list">
-      <div v-if="addresses.length === 0" class="empty-addresses">
+      <div v-if="addresses.length === 0" class="empty-state">
         <va-icon name="location_on" size="3rem" color="secondary" />
         <h3>暂无收货地址</h3>
         <p>添加您的第一个收货地址</p>
@@ -25,12 +25,14 @@
         <va-card-content>
           <div class="address-header">
             <div class="address-info">
-              <span class="contact-name">{{ address.name }}</span>
-              <span class="contact-phone">{{ address.phone }}</span>
+              <div class="contact-info">
+                <span class="contact-name">{{ address.name }}</span>
+                <span class="contact-phone">{{ address.phone }}</span>
+              </div>
               <va-chip v-if="address.isDefault" text="默认" color="primary" size="small" />
             </div>
             <div class="address-actions">
-              <va-button flat size="small" @click="editAddress(address)"> 编辑 </va-button>
+              <va-button flat size="small" @click="editAddress(address)">编辑</va-button>
               <va-button flat size="small" color="danger" @click="deleteAddress(address.id)">
                 删除
               </va-button>
@@ -59,66 +61,49 @@
       @cancel="resetForm"
     >
       <va-form>
-        <div class="form-row">
-          <div class="form-group">
-            <va-input v-model="addressForm.name" label="收货人姓名" :rules="[required]" outline />
-          </div>
-
-          <div class="form-group">
-            <va-input
-              v-model="addressForm.phone"
-              label="手机号"
-              :rules="[required, phoneRule]"
-              outline
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <va-select
-              v-model="addressForm.province"
-              label="省份"
-              :options="provinces"
-              :rules="[required]"
-              outline
-            />
-          </div>
-
-          <div class="form-group">
-            <va-select
-              v-model="addressForm.city"
-              label="城市"
-              :options="cities"
-              :rules="[required]"
-              outline
-            />
-          </div>
-
-          <div class="form-group">
-            <va-select
-              v-model="addressForm.district"
-              label="区县"
-              :options="districts"
-              :rules="[required]"
-              outline
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <va-textarea
-            v-model="addressForm.detail"
-            label="详细地址"
-            :rules="[required]"
+        <div class="form-grid">
+          <va-input v-model="addressForm.name" label="收货人姓名" :rules="[required]" outline />
+          <va-input
+            v-model="addressForm.phone"
+            label="手机号"
+            :rules="[required, phoneRule]"
             outline
-            placeholder="请输入详细地址，如街道、门牌号等"
           />
         </div>
 
-        <div class="form-group">
-          <va-checkbox v-model="addressForm.isDefault" label="设为默认地址" />
+        <div class="form-grid">
+          <va-select
+            v-model="addressForm.province"
+            label="省份"
+            :options="provinces"
+            :rules="[required]"
+            outline
+          />
+          <va-select
+            v-model="addressForm.city"
+            label="城市"
+            :options="cities"
+            :rules="[required]"
+            outline
+          />
+          <va-select
+            v-model="addressForm.district"
+            label="区县"
+            :options="districts"
+            :rules="[required]"
+            outline
+          />
         </div>
+
+        <va-textarea
+          v-model="addressForm.detail"
+          label="详细地址"
+          :rules="[required]"
+          outline
+          placeholder="请输入详细地址，如街道、门牌号等"
+        />
+
+        <va-checkbox v-model="addressForm.isDefault" label="设为默认地址" />
       </va-form>
     </va-modal>
   </div>
@@ -212,21 +197,18 @@ const editAddress = (address: Address) => {
 
 const saveAddress = () => {
   if (isEditing.value && editingId.value) {
-    // 更新地址
     const index = addresses.value.findIndex((addr) => addr.id === editingId.value)
     if (index > -1) {
       addresses.value[index] = { ...addressForm.value, id: editingId.value }
     }
   } else {
-    // 添加新地址
     const newAddress: Address = {
       ...addressForm.value,
-      id: Date.now(), // 简单的ID生成
+      id: Date.now(),
     }
     addresses.value.push(newAddress)
   }
 
-  // 如果设置为默认地址，取消其他地址的默认状态
   if (addressForm.value.isDefault) {
     addresses.value.forEach((addr) => {
       if (addr.id !== editingId.value) {
@@ -282,7 +264,7 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.empty-addresses {
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -291,12 +273,12 @@ onMounted(() => {
   text-align: center;
 }
 
-.empty-addresses h3 {
+.empty-state h3 {
   margin: 1rem 0 0.5rem 0;
   color: var(--va-text-primary);
 }
 
-.empty-addresses p {
+.empty-state p {
   color: var(--va-text-secondary);
 }
 
@@ -325,6 +307,12 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .contact-name {
   font-weight: 600;
   color: var(--va-text-primary);
@@ -351,14 +339,10 @@ onMounted(() => {
   border-top: 1px solid var(--va-background-border);
 }
 
-.form-row {
+.form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.form-group {
   margin-bottom: 1.5rem;
 }
 
@@ -378,7 +362,7 @@ onMounted(() => {
     justify-content: flex-start;
   }
 
-  .form-row {
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }

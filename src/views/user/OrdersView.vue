@@ -16,94 +16,81 @@
 
     <!-- 订单列表 -->
     <div class="orders-list">
-      <div v-if="loading" class="loading-container">
+      <div v-if="loading" class="loading-state">
         <va-progress-circle indeterminate />
         <p>加载中...</p>
       </div>
 
-      <div v-else-if="orders.length === 0" class="empty-orders">
+      <div v-else-if="orders.length === 0" class="empty-state">
         <va-icon name="receipt_long" size="3rem" color="secondary" />
         <h3>暂无订单</h3>
         <p>快去选购您喜欢的商品吧</p>
-        <va-button @click="$router.push('/products')"> 开始购物 </va-button>
+        <va-button @click="$router.push('/products')">开始购物</va-button>
       </div>
 
-      <div v-else>
-        <va-card v-for="order in orders" :key="order.id" class="order-card">
-          <va-card-content>
-            <!-- 订单头部 -->
-            <div class="order-header">
-              <div class="order-info">
-                <span class="order-number">订单号：{{ order.orderNumber }}</span>
-                <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+      <va-card v-else v-for="order in orders" :key="order.id" class="order-card">
+        <va-card-content>
+          <!-- 订单头部 -->
+          <div class="order-header">
+            <div class="order-info">
+              <span class="order-number">订单号：{{ order.orderNumber }}</span>
+              <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+            </div>
+            <va-chip :color="getStatusColor(order.status)" :text="getStatusText(order.status)" />
+          </div>
+
+          <va-divider />
+
+          <!-- 订单商品 -->
+          <div class="order-items">
+            <div v-for="item in order.items" :key="item.id" class="order-item">
+              <img
+                :src="item.productImage || 'https://via.placeholder.com/80x80'"
+                :alt="item.productName"
+                class="item-image"
+              />
+              <div class="item-info">
+                <h4 class="item-name">{{ item.productName }}</h4>
+                <p class="item-price">¥{{ item.productPrice.toFixed(2) }} x {{ item.quantity }}</p>
               </div>
-              <div class="order-status">
-                <va-chip
-                  :color="getStatusColor(order.status)"
-                  :text="getStatusText(order.status)"
-                />
-              </div>
+              <div class="item-total">¥{{ item.subtotal.toFixed(2) }}</div>
+            </div>
+          </div>
+
+          <va-divider />
+
+          <!-- 订单底部 -->
+          <div class="order-footer">
+            <div class="order-total">
+              <span class="total-label">订单总额：</span>
+              <span class="total-amount">¥{{ order.totalAmount.toFixed(2) }}</span>
             </div>
 
-            <va-divider />
-
-            <!-- 订单商品 -->
-            <div class="order-items">
-              <div v-for="item in order.items" :key="item.id" class="order-item">
-                <div class="item-image">
-                  <img
-                    :src="item.productImage || 'https://via.placeholder.com/80x80'"
-                    :alt="item.productName"
-                  />
-                </div>
-                <div class="item-info">
-                  <h4 class="item-name">{{ item.productName }}</h4>
-                  <p class="item-price">
-                    ¥{{ item.productPrice.toFixed(2) }} x {{ item.quantity }}
-                  </p>
-                </div>
-                <div class="item-total">¥{{ item.subtotal.toFixed(2) }}</div>
-              </div>
+            <div class="order-actions">
+              <va-button v-if="order.status === 'pending'" size="small" @click="payOrder(order)">
+                立即付款
+              </va-button>
+              <va-button
+                v-if="order.status === 'shipped'"
+                size="small"
+                @click="confirmOrder(order)"
+              >
+                确认收货
+              </va-button>
+              <va-button
+                v-if="order.status === 'pending'"
+                size="small"
+                flat
+                color="danger"
+                @click="cancelOrder(order)"
+              >
+                取消订单
+              </va-button>
+              <va-button size="small" flat @click="viewOrderDetail(order)">查看详情</va-button>
             </div>
-
-            <va-divider />
-
-            <!-- 订单底部 -->
-            <div class="order-footer">
-              <div class="order-total">
-                <span class="total-label">订单总额：</span>
-                <span class="total-amount">¥{{ order.totalAmount.toFixed(2) }}</span>
-              </div>
-
-              <div class="order-actions">
-                <va-button v-if="order.status === 'pending'" size="small" @click="payOrder(order)">
-                  立即付款
-                </va-button>
-
-                <va-button
-                  v-if="order.status === 'shipped'"
-                  size="small"
-                  @click="confirmOrder(order)"
-                >
-                  确认收货
-                </va-button>
-
-                <va-button
-                  v-if="order.status === 'pending'"
-                  size="small"
-                  flat
-                  color="danger"
-                  @click="cancelOrder(order)"
-                >
-                  取消订单
-                </va-button>
-
-                <va-button size="small" flat @click="viewOrderDetail(order)"> 查看详情 </va-button>
-              </div>
-            </div>
-          </va-card-content>
-        </va-card>
-      </div>
+          </div>
+        </va-card-content>
+      </va-card>
     </div>
 
     <!-- 分页 -->
@@ -206,22 +193,15 @@ const getStatusColor = (status: string) => {
   return statusMap[status as keyof typeof statusMap]?.color || 'secondary'
 }
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString('zh-CN')
-}
+const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN')
 
 const loadOrders = () => {
   loading.value = true
-
-  // 模拟API调用
-  setTimeout(() => {
-    loading.value = false
-  }, 1000)
+  setTimeout(() => (loading.value = false), 1000)
 }
 
 const payOrder = (order: Order) => {
   console.log('支付订单:', order.id)
-  // 跳转到支付页面
 }
 
 const confirmOrder = (order: Order) => {
@@ -236,7 +216,6 @@ const cancelOrder = (order: Order) => {
 
 const viewOrderDetail = (order: Order) => {
   console.log('查看订单详情:', order.id)
-  // 跳转到订单详情页面
 }
 
 watch(activeTab, () => {
@@ -254,9 +233,8 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
-  margin: 0 0 2rem 0;
   color: var(--va-text-primary);
 }
 
@@ -270,7 +248,8 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.loading-container {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -279,21 +258,12 @@ onMounted(() => {
   text-align: center;
 }
 
-.empty-orders {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
-.empty-orders h3 {
+.empty-state h3 {
   margin: 1rem 0 0.5rem 0;
   color: var(--va-text-primary);
 }
 
-.empty-orders p {
+.empty-state p {
   color: var(--va-text-secondary);
   margin-bottom: 2rem;
 }
@@ -342,11 +312,11 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.item-image img {
+.item-image {
   width: 80px;
   height: 80px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--va-border-radius);
 }
 
 .item-info {
@@ -402,6 +372,7 @@ onMounted(() => {
 .order-actions {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .pagination-container {
@@ -430,7 +401,6 @@ onMounted(() => {
 
   .order-actions {
     justify-content: center;
-    flex-wrap: wrap;
   }
 }
 </style>
