@@ -1,14 +1,17 @@
 <template>
   <div class="checkout">
-    <div>
-      <h1 class="page-title">结算</h1>
+    <div class="checkout-container">
+      <div class="page-header">
+        <h1 class="page-title">订单结算</h1>
+        <p class="page-subtitle">请确认您的订单信息并选择支付方式</p>
+      </div>
 
-      <va-row :gutter="24">
+      <va-row :gutter="32">
         <!-- 左侧：订单信息 -->
         <va-column :xs="12" :lg="8">
           <!-- 收货地址 -->
           <va-card class="section-card">
-            <va-card-title>
+            <va-card-title class="section-title">
               <va-icon name="location_on" class="title-icon" />
               收货地址
             </va-card-title>
@@ -27,6 +30,7 @@
                 </va-button>
               </div>
               <div v-else class="no-address">
+                <va-icon name="location_off" size="2rem" color="secondary" />
                 <p>请选择收货地址</p>
                 <va-button @click="showAddressDialog = true"> 选择地址 </va-button>
               </div>
@@ -35,13 +39,14 @@
 
           <!-- 商品清单 -->
           <va-card class="section-card">
-            <va-card-title>
+            <va-card-title class="section-title">
               <va-icon name="shopping_cart" class="title-icon" />
               商品清单
+              <span class="item-count">(共{{ cartItems.length }}件商品)</span>
             </va-card-title>
-            <va-card-content>
+            <va-card-content class="section-content">
               <div v-for="item in cartItems" :key="item.id" class="cart-item">
-                <va-avatar :src="item.image_url || '/placeholder.png'" size="small" square />
+                <va-avatar :src="item.image_url" size="large" square />
                 <div class="item-info">
                   <div class="item-name">{{ item.name }}</div>
                   <div class="item-meta">¥{{ formatPrice(item.price) }} × {{ item.quantity }}</div>
@@ -53,11 +58,11 @@
 
           <!-- 支付方式 -->
           <va-card class="section-card">
-            <va-card-title>
+            <va-card-title class="section-title">
               <va-icon name="payment" class="title-icon" />
               支付方式
             </va-card-title>
-            <va-card-content>
+            <va-card-content class="section-content">
               <va-radio v-model="paymentMethod" :options="paymentOptions" value-by="value" />
             </va-card-content>
           </va-card>
@@ -66,8 +71,8 @@
         <!-- 右侧：订单摘要 -->
         <va-column :xs="12" :lg="4">
           <va-card class="order-summary" sticky>
-            <va-card-title>订单摘要</va-card-title>
-            <va-card-content>
+            <va-card-title class="section-title">订单摘要</va-card-title>
+            <va-card-content class="section-content">
               <div class="summary-row">
                 <span>商品金额</span>
                 <span>¥{{ formatPrice(subtotal) }}</span>
@@ -85,6 +90,7 @@
               <va-button
                 class="submit-btn"
                 block
+                size="large"
                 :loading="submitting"
                 :disabled="!canSubmit"
                 @click="handleSubmitOrder"
@@ -256,122 +262,205 @@ onMounted(() => {
 
 <style scoped>
 .checkout {
-  padding: 20px 0;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  padding: 2rem 0;
+}
+
+.checkout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .page-title {
-  text-align: center;
-  margin-bottom: 32px;
-  color: var(--va-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--va-text-primary);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: var(--va-text-secondary);
+  margin: 0;
+  font-weight: 400;
 }
 
 .section-card {
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0 1.5rem;
 }
 
 .title-icon {
-  margin-right: 8px;
+  margin-right: 0.75rem;
+  font-size: 1.5rem;
+  color: var(--va-primary);
+}
+
+.item-count {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--va-text-secondary);
+}
+
+.section-content {
+  padding: 2rem;
 }
 
 .address-item {
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  background: #fff;
 }
 
 .address-item:hover {
   border-color: var(--va-primary);
+  box-shadow: 0 4px 12px rgba(var(--va-primary-rgb), 0.15);
 }
 
 .address-item.selected {
   border-color: var(--va-primary);
-  background-color: rgba(var(--va-primary-rgb), 0.05);
+  background-color: rgba(var(--va-primary-rgb), 0.03);
+  box-shadow: 0 4px 12px rgba(var(--va-primary-rgb), 0.15);
 }
 
 .address-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .name {
   font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--va-text-primary);
 }
 
 .phone {
-  color: var(--va-secondary);
+  color: var(--va-text-secondary);
+  font-size: 0.95rem;
 }
 
 .address-detail {
-  color: var(--va-secondary);
-  font-size: 14px;
+  color: var(--va-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
 }
 
 .no-address {
   text-align: center;
-  padding: 40px 0;
-  color: var(--va-secondary);
+  padding: 3rem 1rem;
+  color: var(--va-text-secondary);
+}
+
+.no-address .va-icon {
+  margin-bottom: 1rem;
+}
+
+.no-address p {
+  margin: 0 0 1.5rem 0;
+  font-size: 1rem;
 }
 
 .cart-item {
   display: flex;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.cart-item:first-child {
+  padding-top: 0;
 }
 
 .cart-item:last-child {
+  padding-bottom: 0;
   border-bottom: none;
 }
 
 .item-info {
   flex: 1;
-  margin-left: 12px;
+  margin-left: 1rem;
 }
 
 .item-name {
   font-weight: 500;
-  margin-bottom: 4px;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--va-text-primary);
+  line-height: 1.4;
 }
 
 .item-meta {
-  font-size: 14px;
-  color: var(--va-secondary);
+  font-size: 0.9rem;
+  color: var(--va-text-secondary);
 }
 
 .item-total {
   font-weight: 600;
+  font-size: 1.1rem;
   color: var(--va-primary);
 }
 
 .order-summary {
   position: sticky;
-  top: 20px;
+  top: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
 }
 
 .summary-row.total {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-top: 16px;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
 }
 
 .total-amount {
-  color: var(--va-primary);
+  color: var(--va-danger);
+  font-weight: 700;
 }
 
 .submit-btn {
-  margin-top: 24px;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.75rem;
 }
 
 .address-list {
@@ -380,6 +469,41 @@ onMounted(() => {
 }
 
 .address-list .address-item {
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .checkout-container {
+    padding: 0 0.75rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    padding: 1rem 1rem 0 1rem;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .item-info {
+    margin: 0.75rem 0;
+  }
+
+  .order-summary {
+    position: static;
+    margin-top: 1rem;
+  }
 }
 </style>

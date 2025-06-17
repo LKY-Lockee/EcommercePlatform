@@ -72,7 +72,6 @@ const userStore = useUserStore()
 .user-center {
   min-height: 100vh;
   padding: 2rem 0;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 .container {

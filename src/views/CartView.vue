@@ -190,7 +190,6 @@ const handleCheckout = () => {
 .cart-view {
   min-height: 100vh;
   padding: 2rem 0;
-  background-color: var(--va-background-secondary);
 }
 
 .container {
@@ -210,7 +209,6 @@ const handleCheckout = () => {
 .empty-cart {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
   border-radius: 8px;
 }
 
@@ -228,7 +226,7 @@ const handleCheckout = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 0;
+  padding: 0.5rem 0 1rem 0 ;
 }
 
 .item-count {
@@ -364,7 +362,7 @@ const handleCheckout = () => {
   font-size: 1.2rem;
   font-weight: bold;
   border-top: 1px solid var(--va-background-border);
-  padding-top: 0.5rem;
+  padding-top: 1rem;
   margin-top: 0.5rem;
 }
 
