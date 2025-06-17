@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import {
   getOrders,
   cancelOrder as cancelOrderAPI,
@@ -131,14 +131,7 @@ const totalPages = ref(1)
 const orders = ref<Order[]>([])
 
 // 订单状态映射
-const statusMap = {
-  0: '', // 全部订单
-  1: 'pending', // 待付款
-  2: 'paid', // 待发货
-  3: 'shipped', // 待收货
-  4: 'delivered', // 已完成
-  5: 'cancelled', // 已取消
-}
+const statusMap = ['', 'pending', 'paid', 'shipped', 'delivered', 'cancelled']
 
 const statusDisplayMap = {
   pending: { text: '待付款', color: 'warning' },
@@ -150,28 +143,19 @@ const statusDisplayMap = {
 
 // 根据选中的标签过滤订单
 const filteredOrders = computed(() => {
-  const targetStatus = statusMap[activeTab.value as keyof typeof statusMap]
-  if (!targetStatus) {
-    return orders.value
-  }
-  return orders.value.filter((order) => order.status === targetStatus)
+  const targetStatus = statusMap[activeTab.value]
+  return targetStatus ? orders.value.filter((order) => order.status === targetStatus) : orders.value
 })
 
 // 加载订单列表
 const loadOrders = async (page = 1) => {
   loading.value = true
   try {
-    console.log('正在加载订单列表...')
     const response = await getOrders()
-    console.log('订单API响应:', response.data)
-
     orders.value = response.data || []
     currentPage.value = page
     totalPages.value = 1
-
-    console.log('已加载订单数量:', orders.value.length)
-  } catch (error) {
-    console.error('加载订单失败:', error)
+  } catch {
     orders.value = []
   } finally {
     loading.value = false
@@ -196,28 +180,24 @@ const formatPrice = (price: number | string) => {
 }
 
 const getProductImage = (productId: number) => {
-  // 这里可以根据产品ID获取图片，暂时返回占位图
   return `https://via.placeholder.com/80x80?text=Product${productId}`
+}
+
+const updateOrderStatus = (orderId: number, status: Order['status']) => {
+  const orderIndex = orders.value.findIndex((o) => o.id === orderId)
+  if (orderIndex > -1) {
+    orders.value[orderIndex].status = status
+  }
 }
 
 const handlePayOrder = async (order: Order) => {
   try {
     actionLoading.value = order.id
-    console.log('正在支付订单:', order.id)
-
     await payOrderAPI(order.id)
-    console.log('支付成功')
-
-    // 支付成功后刷新购物车状态（服务器已清空购物车）
     await cartStore.fetchCart()
-
-    // 更新订单状态
-    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
-    if (orderIndex > -1) {
-      orders.value[orderIndex].status = 'paid'
-    }
-  } catch (error) {
-    console.error('支付订单失败:', error)
+    updateOrderStatus(order.id, 'paid')
+  } catch {
+    // Error handled by API layer
   } finally {
     actionLoading.value = null
   }
@@ -226,18 +206,10 @@ const handlePayOrder = async (order: Order) => {
 const handleConfirmOrder = async (order: Order) => {
   try {
     actionLoading.value = order.id
-    console.log('确认收货:', order.id)
-
     await confirmOrderAPI(order.id)
-    console.log('确认收货成功')
-
-    // 更新订单状态
-    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
-    if (orderIndex > -1) {
-      orders.value[orderIndex].status = 'delivered'
-    }
-  } catch (error) {
-    console.error('确认收货失败:', error)
+    updateOrderStatus(order.id, 'delivered')
+  } catch {
+    // Error handled by API layer
   } finally {
     actionLoading.value = null
   }
@@ -246,26 +218,14 @@ const handleConfirmOrder = async (order: Order) => {
 const handleCancelOrder = async (order: Order) => {
   try {
     actionLoading.value = order.id
-    console.log('取消订单:', order.id)
-
     await cancelOrderAPI(order.id)
-    console.log('订单已取消')
-
-    // 更新订单状态
-    const orderIndex = orders.value.findIndex((o) => o.id === order.id)
-    if (orderIndex > -1) {
-      orders.value[orderIndex].status = 'cancelled'
-    }
-  } catch (error) {
-    console.error('取消订单失败:', error)
+    updateOrderStatus(order.id, 'cancelled')
+  } catch {
+    // Error handled by API layer
   } finally {
     actionLoading.value = null
   }
 }
-
-watch(activeTab, () => {
-  console.log('切换订单状态标签:', activeTab.value)
-})
 
 onMounted(() => {
   loadOrders()
@@ -403,10 +363,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.total-label {
-  color: var(--va-text-secondary);
 }
 
 .total-amount {

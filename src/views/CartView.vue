@@ -12,7 +12,7 @@
 
       <div v-else>
         <va-card>
-          <va-card-content>
+          <va-card-content class="cart-content">
             <!-- 购物车头部 -->
             <div class="cart-header">
               <va-checkbox
@@ -26,7 +26,7 @@
                 flat
                 color="danger"
                 @click="handleClearSelected"
-                :disabled="cartStore.selectedItems.length === 0"
+                :disabled="!cartStore.selectedItems.length"
               >
                 删除选中
               </va-button>
@@ -71,7 +71,7 @@
                     :model-value="item.quantity"
                     :min="1"
                     :max="item.product.stock"
-                    @update:model-value="(value) => handleUpdateQuantity(item.id, value)"
+                    @update:model-value="(value: number) => handleUpdateQuantity(item.id, value)"
                   />
                   <span class="stock-info">库存: {{ item.product.stock }}</span>
                 </div>
@@ -112,7 +112,7 @@
                   size="large"
                   color="primary"
                   @click="handleCheckout"
-                  :disabled="cartStore.selectedItems.length === 0"
+                  :disabled="!cartStore.selectedItems.length"
                 >
                   结算 ({{ cartStore.selectedItems.length }})
                 </va-button>
@@ -135,54 +135,28 @@ const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 
-// 格式化价格，确保始终显示为数字
 const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
-  if (isNaN(numPrice)) {
-    return '0.00'
-  }
-  return numPrice.toFixed(2)
+  return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
 const allSelected = computed(
   () => cartStore.items.length > 0 && cartStore.items.every((item) => item.selected),
 )
 
-const handleClearSelected = async () => {
-  try {
-    await cartStore.clearSelected()
-  } catch (error) {
-    console.error('删除选中商品失败:', error)
-  }
-}
-
-const handleUpdateQuantity = async (itemId: number, quantity: number) => {
-  try {
-    await cartStore.updateQuantity(itemId, quantity)
-  } catch (error) {
-    console.error('更新商品数量失败:', error)
-  }
-}
-
-const handleRemoveItem = async (itemId: number) => {
-  try {
-    await cartStore.removeFromCart(itemId)
-  } catch (error) {
-    console.error('删除商品失败:', error)
-  }
-}
+const handleClearSelected = () => cartStore.clearSelected()
+const handleUpdateQuantity = (itemId: number, quantity: number) =>
+  cartStore.updateQuantity(itemId, quantity)
+const handleRemoveItem = (itemId: number) => cartStore.removeFromCart(itemId)
 
 const handleCheckout = () => {
   if (!userStore.isLoggedIn) {
     router.push('/login')
     return
   }
-
-  if (cartStore.selectedItems.length === 0) {
-    return
+  if (cartStore.selectedItems.length > 0) {
+    router.push('/checkout')
   }
-
-  router.push('/checkout')
 }
 </script>
 
@@ -222,11 +196,15 @@ const handleCheckout = () => {
   margin-bottom: 2rem;
 }
 
+.cart-content {
+  padding: 2rem;
+}
+
 .cart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0 1rem 0 ;
+  padding: 0 0 0.5rem 0;
 }
 
 .item-count {

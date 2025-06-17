@@ -24,7 +24,7 @@
                 </div>
               </div>
 
-              <va-divider style="margin: 1.5rem 0" />
+              <va-divider class="profile-divider" />
 
               <nav class="user-nav">
                 <router-link to="/user/profile" class="nav-item">
@@ -93,7 +93,8 @@ const userStore = useUserStore()
   top: 5rem;
 }
 
-.sidebar-card {
+.sidebar-card,
+.user-main {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -115,6 +116,10 @@ const userStore = useUserStore()
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+}
+
+.profile-divider {
+  margin: 1.5rem 0;
 }
 
 .username {
@@ -146,7 +151,6 @@ const userStore = useUserStore()
   border-radius: 10px;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
 }
 
 .nav-item::before {
@@ -217,8 +221,6 @@ const userStore = useUserStore()
   border-radius: 0.375rem;
   padding: 2rem;
   min-height: 500px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 @media (max-width: 992px) {

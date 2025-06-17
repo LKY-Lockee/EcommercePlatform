@@ -44,9 +44,9 @@
 
             <div class="product-rating">
               <va-rating :model-value="Number(product.rating)" readonly color="warning" />
-              <span class="rating-text"
-                >{{ Number(product.rating).toFixed(1) }} ({{ product.rating_count }}人评价)</span
-              >
+              <span class="rating-text">
+                {{ Number(product.rating).toFixed(1) }} ({{ product.rating_count }}人评价)
+              </span>
             </div>
 
             <div class="product-price">
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { productAPI, type Product } from '@/api/product'
 import { useCartStore } from '@/stores/cart'
@@ -144,37 +144,26 @@ const loading = ref(false)
 const quantity = ref(1)
 const currentImage = ref('')
 
-// 格式化价格，确保始终显示为数字
 const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
-  if (isNaN(numPrice)) {
-    return '0.00'
-  }
-  return numPrice.toFixed(2)
+  return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
-const currentImage_computed = computed(() => {
-  if (!product.value) return ''
-  if (currentImage.value) return currentImage.value
-  if (product.value.images && product.value.images.length > 0) {
-    return (
-      product.value.images.find((img) => img.is_primary)?.image_url ||
-      product.value.images[0].image_url
-    )
+const getInitialImage = (product: Product): string => {
+  if (product.images?.length) {
+    return product.images.find((img) => img.is_primary)?.image_url || product.images[0].image_url
   }
-  return product.value.primary_image || 'https://via.placeholder.com/500x500?text=No+Image'
-})
+  return product.primary_image || 'https://via.placeholder.com/500x500?text=No+Image'
+}
 
 const loadProduct = async () => {
   loading.value = true
-
   try {
     const productId = Number(route.params.id)
     const response = await productAPI.getProduct(productId)
     product.value = response.data
-    currentImage.value = currentImage_computed.value
-  } catch (error) {
-    console.error('加载商品详情失败:', error)
+    currentImage.value = getInitialImage(response.data)
+  } catch {
     product.value = null
   } finally {
     loading.value = false
@@ -183,13 +172,10 @@ const loadProduct = async () => {
 
 const addToCart = async () => {
   if (!product.value) return
-
   try {
     await cartStore.addToCart(product.value, quantity.value)
-    // 这里可以添加成功提示
-    console.log('添加到购物车成功')
-  } catch (error) {
-    console.error('添加到购物车失败:', error)
+  } catch {
+    // 错误处理可在这里添加用户提示
   }
 }
 
@@ -204,14 +190,12 @@ const buyNow = async () => {
   try {
     await cartStore.addToCart(product.value, quantity.value)
     router.push('/checkout')
-  } catch (error) {
-    console.error('购买失败:', error)
+  } catch {
+    // 错误处理可在这里添加用户提示
   }
 }
 
-onMounted(() => {
-  loadProduct()
-})
+onMounted(loadProduct)
 </script>
 
 <style scoped>

@@ -35,9 +35,7 @@
                 <span class="contact-name">{{ address.name }}</span>
                 <span class="contact-phone">{{ address.phone }}</span>
               </div>
-              <va-chip v-if="address.is_default" color="primary" size="small">
-                默认
-              </va-chip>
+              <va-chip v-if="address.is_default" color="primary" size="small"> 默认 </va-chip>
             </div>
             <div class="address-actions">
               <va-button flat size="small" @click="editAddress(address)">编辑</va-button>
@@ -190,11 +188,7 @@ const addressForm = ref({
 
 // 验证规则
 const required = (value: unknown) => !!value || '此字段是必填的'
-
-const phoneRule = (value: string) => {
-  const phonePattern = /^1[3-9]\d{9}$/
-  return phonePattern.test(value) || '请输入有效的手机号'
-}
+const phoneRule = (value: string) => /^1[3-9]\d{9}$/.test(value) || '请输入有效的手机号'
 
 // 计算表单是否有效
 const isFormValid = computed(() => {
@@ -214,13 +208,9 @@ const isFormValid = computed(() => {
 const loadAddresses = async () => {
   loading.value = true
   try {
-    console.log('正在加载地址列表...')
     const response = await getAddresses()
-    console.log('地址API响应:', response.data)
     addresses.value = response.data || []
-    console.log('已加载地址数量:', addresses.value.length)
-  } catch (error) {
-    console.error('加载地址列表失败:', error)
+  } catch {
     addresses.value = []
   } finally {
     loading.value = false
@@ -231,8 +221,8 @@ const loadAddresses = async () => {
 const loadProvinces = async () => {
   try {
     provinces.value = await getProvinces()
-  } catch (error) {
-    console.error('加载省份列表失败:', error)
+  } catch {
+    // Error handled by API layer
   }
 }
 
@@ -246,8 +236,8 @@ const onProvinceChange = async (province: string) => {
   if (province) {
     try {
       cities.value = await getCitiesByProvince(province)
-    } catch (error) {
-      console.error('加载城市列表失败:', error)
+    } catch {
+      // Error handled by API layer
     }
   }
 }
@@ -260,8 +250,8 @@ const onCityChange = async (city: string) => {
   if (city) {
     try {
       districts.value = await getDistrictsByCity(city)
-    } catch (error) {
-      console.error('加载区县列表失败:', error)
+    } catch {
+      // Error handled by API layer
     }
   }
 }
@@ -286,15 +276,7 @@ const resetForm = () => {
 
 // 编辑地址
 const editAddress = async (address: Address) => {
-  addressForm.value = {
-    name: address.name,
-    phone: address.phone,
-    province: address.province,
-    city: address.city,
-    district: address.district,
-    detail: address.detail,
-    is_default: address.is_default,
-  }
+  addressForm.value = { ...address }
 
   // 加载对应的城市和区县
   if (address.province) {
@@ -326,19 +308,15 @@ const handleSaveAddress = async () => {
     }
 
     if (isEditing.value && editingId.value) {
-      console.log('更新地址:', editingId.value, addressData)
       await updateAddress(editingId.value, addressData)
-      console.log('地址更新成功')
     } else {
-      console.log('创建地址:', addressData)
       await createAddress(addressData)
-      console.log('地址创建成功')
     }
 
     await loadAddresses()
     resetForm()
-  } catch (error) {
-    console.error('保存地址失败:', error)
+  } catch {
+    // Error handled by API layer
   } finally {
     saveLoading.value = false
   }
@@ -348,12 +326,10 @@ const handleSaveAddress = async () => {
 const handleDeleteAddress = async (addressId: number) => {
   deleteLoading.value = addressId
   try {
-    console.log('删除地址:', addressId)
     await deleteAddressAPI(addressId)
-    console.log('地址删除成功')
     await loadAddresses()
-  } catch (error) {
-    console.error('删除地址失败:', error)
+  } catch {
+    // Error handled by API layer
   } finally {
     deleteLoading.value = null
   }
@@ -363,12 +339,10 @@ const handleDeleteAddress = async (addressId: number) => {
 const handleSetDefaultAddress = async (addressId: number) => {
   defaultLoading.value = addressId
   try {
-    console.log('设置默认地址:', addressId)
     await setDefaultAddressAPI(addressId)
-    console.log('默认地址设置成功')
     await loadAddresses()
-  } catch (error) {
-    console.error('设置默认地址失败:', error)
+  } catch {
+    // Error handled by API layer
   } finally {
     defaultLoading.value = null
   }

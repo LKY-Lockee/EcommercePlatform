@@ -135,15 +135,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
-// import { useUserStore } from '@/stores/user'
 import { createOrder } from '@/api/order'
 import { userAPI, type Address } from '@/api/user'
 
 const router = useRouter()
 const cartStore = useCartStore()
-// const userStore = useUserStore()
 
-// 从购物车store获取选中的商品，转换为结算页面需要的格式
 const cartItems = computed(() => {
   return cartStore.selectedItems.map((item) => ({
     id: item.id,
@@ -167,34 +164,24 @@ const paymentOptions = [
   { text: '银行卡', value: 'bankcard' },
 ]
 
-const subtotal = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + item.total_price, 0)
-})
+const subtotal = computed(() => cartItems.value.reduce((sum, item) => sum + item.total_price, 0))
 
-const shippingFee = computed(() => {
-  // 简单的运费计算：满100免运费
-  return subtotal.value >= 100 ? 0 : 10
-})
+const shippingFee = computed(() => (subtotal.value >= 100 ? 0 : 10))
 
-const total = computed(() => {
-  return subtotal.value + shippingFee.value
-})
+const total = computed(() => subtotal.value + shippingFee.value)
 
-const canSubmit = computed(() => {
-  return selectedAddress.value && cartItems.value.length > 0 && !submitting.value
-})
+const canSubmit = computed(
+  () => selectedAddress.value && cartItems.value.length > 0 && !submitting.value,
+)
 
 const loadAddresses = async () => {
   try {
     const response = await userAPI.getAddresses()
     addresses.value = response.data
-
-    // 默认选择默认地址
     selectedAddress.value =
       addresses.value.find((addr) => addr.is_default) || addresses.value[0] || null
   } catch (error) {
     console.error('加载地址失败:', error)
-    // 如果获取地址失败，可以提供一个模拟地址供测试
     addresses.value = [
       {
         id: 1,
@@ -237,9 +224,6 @@ const handleSubmitOrder = async () => {
     }
 
     const response = await createOrder(orderData)
-
-    // 不要在这里清空购物车，等支付成功后再清空
-    // 直接跳转到支付页面
     router.push(`/payment/${response.data.order.id}`)
   } catch (error) {
     console.error('创建订单失败:', error)
@@ -249,10 +233,7 @@ const handleSubmitOrder = async () => {
 }
 
 const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('zh-CN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price)
+  return price.toFixed(2)
 }
 
 onMounted(() => {
@@ -267,7 +248,7 @@ onMounted(() => {
 }
 
 .checkout-container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 1rem;
 }

@@ -109,14 +109,14 @@ const changingPassword = ref(false)
 
 // 验证规则
 const required = (value: unknown) => {
-  if (value === null || value === undefined || String(value).trim() === '') {
+  if (!value || String(value).trim() === '') {
     return '此字段是必填的'
   }
   return true
 }
 
 const emailRule = (value: unknown) => {
-  if (value === null || value === undefined || String(value).trim() === '') {
+  if (!value || String(value).trim() === '') {
     return '邮箱是必填的'
   }
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -124,25 +124,20 @@ const emailRule = (value: unknown) => {
 }
 
 const passwordRule = (value: unknown) => {
-  if (value === null || value === undefined || String(value).trim() === '') {
+  if (!value || String(value).trim() === '') {
     return '密码是必填的'
   }
-  if (String(value).length < 6) {
-    return '密码至少需要6个字符'
-  }
-  return true
+  return String(value).length >= 6 || '密码至少需要6个字符'
 }
 
 const confirmPasswordRule = (value: unknown) => {
-  if (value === null || value === undefined || String(value).trim() === '') {
+  if (!value || String(value).trim() === '') {
     return '请确认密码'
   }
   return String(value) === passwordForm.value.newPassword || '两次密码输入不一致'
 }
 
 const initProfileForm = () => {
-  console.log('初始化表单，用户信息:', userStore.user)
-
   if (userStore.user) {
     profileForm.value = {
       username: userStore.user.username || '',
@@ -150,57 +145,11 @@ const initProfileForm = () => {
       phone: userStore.user.phone || '',
       avatar: userStore.user.avatar || '',
     }
-  } else {
-    // 如果没有用户信息，尝试从localStorage获取
-    const savedUser = localStorage.getItem('user')
-    console.log('从localStorage获取用户信息:', savedUser)
-
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser)
-        profileForm.value = {
-          username: user.username || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          avatar: user.avatar || '',
-        }
-      } catch (error) {
-        console.error('解析用户信息失败:', error)
-      }
-    } else {
-      // 如果没有任何用户信息，使用测试数据（仅开发环境）
-      if (import.meta.env.DEV) {
-        console.log('开发环境下设置测试用户数据')
-        const testUser = {
-          id: 1,
-          username: 'testuser',
-          email: 'test@example.com',
-          phone: '13800138000',
-          avatar: '',
-          role: 'user',
-        }
-
-        // 设置到store和localStorage
-        userStore.user = testUser
-        localStorage.setItem('user', JSON.stringify(testUser))
-        localStorage.setItem('token', 'test-token')
-
-        profileForm.value = {
-          username: testUser.username,
-          email: testUser.email,
-          phone: testUser.phone,
-          avatar: testUser.avatar,
-        }
-      }
-    }
   }
-
-  console.log('表单初始化完成:', profileForm.value)
 }
 
 const resetProfileForm = () => {
   initProfileForm()
-  // 重置表单验证状态
   profileFormRef.value?.resetValidation?.()
 }
 
@@ -210,28 +159,16 @@ const resetPasswordForm = () => {
     newPassword: '',
     confirmPassword: '',
   }
-  // 重置表单验证状态
   passwordFormRef.value?.resetValidation?.()
 }
 
 const handleSave = async () => {
-  console.log('开始保存，表单数据:', profileForm.value)
-
-  // 验证表单
   const isValid = await profileFormRef.value?.validate()
-  console.log('表单验证结果:', isValid)
-
-  if (!isValid) {
-    return
-  }
+  if (!isValid) return
 
   saving.value = true
-
   try {
-    // 调用真实API
     const result = await userStore.updateProfile(profileForm.value)
-    console.log('API调用结果:', result)
-
     if (result.success) {
       notify({
         message: '个人信息更新成功',
@@ -243,8 +180,7 @@ const handleSave = async () => {
         color: 'danger',
       })
     }
-  } catch (error) {
-    console.error('API调用错误:', error)
+  } catch {
     notify({
       message: '更新个人信息失败，请检查网络连接',
       color: 'danger',
@@ -255,13 +191,9 @@ const handleSave = async () => {
 }
 
 const handleChangePassword = async () => {
-  // 验证表单
   const isValid = await passwordFormRef.value?.validate()
-  if (!isValid) {
-    return
-  }
+  if (!isValid) return
 
-  // 检查新密码与确认密码是否一致
   if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
     notify({
       message: '两次密码输入不一致',
@@ -271,9 +203,7 @@ const handleChangePassword = async () => {
   }
 
   changingPassword.value = true
-
   try {
-    // 调用真实API
     await userAPI.changePassword({
       currentPassword: passwordForm.value.currentPassword,
       newPassword: passwordForm.value.newPassword,
@@ -283,10 +213,8 @@ const handleChangePassword = async () => {
       message: '密码修改成功',
       color: 'success',
     })
-    // 清空密码表单
     resetPasswordForm()
-  } catch (error) {
-    console.error('修改密码失败:', error)
+  } catch {
     notify({
       message: '修改密码失败，请检查当前密码是否正确',
       color: 'danger',
@@ -297,34 +225,15 @@ const handleChangePassword = async () => {
 }
 
 onMounted(() => {
-  console.log('组件挂载开始')
-  console.log('当前用户store状态:', userStore.user)
-  console.log('localStorage中的用户信息:', localStorage.getItem('user'))
-
-  // 确保用户store已初始化
   if (!userStore.user) {
-    console.log('用户store为空，初始化用户信息')
     userStore.initUser()
   }
-
-  // 初始化表单
   initProfileForm()
-
-  // 延迟一点再次检查，确保响应式更新
-  setTimeout(() => {
-    console.log('延迟检查表单状态:', profileForm.value)
-    if (!profileForm.value.username && !profileForm.value.email) {
-      console.log('表单仍为空，再次尝试初始化')
-      initProfileForm()
-    }
-  }, 100)
 })
 
-// 监听用户store变化
 watch(
   () => userStore.user,
   (newUser) => {
-    console.log('用户store发生变化:', newUser)
     if (newUser) {
       initProfileForm()
     }

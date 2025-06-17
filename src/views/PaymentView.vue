@@ -173,15 +173,9 @@ const handlePay = async () => {
 
   try {
     paying.value = true
-
-    // 模拟支付延迟
     await new Promise((resolve) => setTimeout(resolve, 2000))
-
     await payOrder(order.value.id)
-
-    // 支付成功后刷新购物车状态（服务器已清空购物车）
     await cartStore.fetchCart()
-
     showSuccessDialog.value = true
   } catch (error) {
     console.error('支付失败:', error)
@@ -195,21 +189,11 @@ const formatPrice = (price: number | string) => {
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
-const goBack = () => {
-  router.go(-1)
-}
+const goBack = () => router.go(-1)
+const goToOrders = () => router.push('/user/orders')
+const goToHome = () => router.push('/')
 
-const goToOrders = () => {
-  router.push('/user/orders')
-}
-
-const goToHome = () => {
-  router.push('/')
-}
-
-onMounted(() => {
-  loadOrder()
-})
+onMounted(loadOrder)
 </script>
 
 <style scoped>
@@ -266,7 +250,7 @@ onMounted(() => {
   padding: 1.5rem 1.5rem 0 1.5rem;
 }
 
-.section-content{
+.section-content {
   padding: 2rem;
 }
 
@@ -292,7 +276,6 @@ onMounted(() => {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 2px solid var(--va-primary);
-  border-bottom: none;
 }
 
 .label {

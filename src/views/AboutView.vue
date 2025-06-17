@@ -40,9 +40,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
-// 页面组件
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .about-view {
@@ -127,20 +125,6 @@
   font-size: 0.95rem;
   color: var(--va-text-secondary);
   margin: 0;
-}
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 1.1rem;
-  color: var(--va-text-secondary);
 }
 
 @media (max-width: 768px) {
