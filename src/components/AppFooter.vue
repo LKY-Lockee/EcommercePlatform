@@ -1,115 +1,101 @@
 <template>
   <footer class="app-footer">
-    <div class="footer-main">
-      <div class="footer-container">
-        <!-- 品牌信息区域 -->
-        <div class="footer-brand">
-          <div class="brand-section">
-            <div class="footer-logo">
-              <va-icon name="storefront" size="2.5rem" color="primary" />
-              <h3 class="footer-brand-name">ShopMart</h3>
-            </div>
-            <p class="footer-description">
-              致力于为用户提供最优质的购物体验，精选全球好物，品质保证，服务至上。
-            </p>
-            <div class="social-section">
-              <h4 class="social-title">关注我们</h4>
-              <div class="social-links">
-                <va-button
-                  icon="facebook"
-                  preset="plain"
-                  color="primary"
-                  class="social-btn"
-                />
-                <va-button
-                  icon="wechat"
-                  preset="plain"
-                  color="primary"
-                  class="social-btn"
-                />
-              </div>
-            </div>
+    <div class="footer-container">
+      <!-- 品牌信息区域 -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <va-icon name="storefront" size="2.5rem" color="primary" />
+          <h3 class="footer-brand-name">ShopMart</h3>
+        </div>
+        <p class="footer-description">
+          致力于为用户提供最优质的购物体验，精选全球好物，品质保证，服务至上。
+        </p>
+        <div class="social-section">
+          <h4 class="social-title">关注我们</h4>
+          <div class="social-links">
+            <va-button icon="facebook" preset="plain" color="primary" class="social-btn" />
+            <va-button icon="wechat" preset="plain" color="primary" class="social-btn" />
           </div>
         </div>
+      </div>
 
-        <!-- 快速链接 -->
-        <div class="footer-section">
-          <h4 class="section-title">购物指南</h4>
-          <ul class="footer-links">
-            <li><router-link to="/guide/register" class="footer-link">新用户注册</router-link></li>
-            <li><router-link to="/guide/shopping" class="footer-link">购物流程</router-link></li>
-            <li><router-link to="/guide/payment" class="footer-link">支付方式</router-link></li>
-            <li><router-link to="/guide/delivery" class="footer-link">配送说明</router-link></li>
-            <li><router-link to="/guide/faq" class="footer-link">常见问题</router-link></li>
-          </ul>
-        </div>
+      <!-- 快速链接 -->
+      <div class="footer-section">
+        <h4 class="section-title">购物指南</h4>
+        <ul class="footer-links">
+          <li><router-link to="/guide/register" class="footer-link">新用户注册</router-link></li>
+          <li><router-link to="/guide/shopping" class="footer-link">购物流程</router-link></li>
+          <li><router-link to="/guide/payment" class="footer-link">支付方式</router-link></li>
+          <li><router-link to="/guide/delivery" class="footer-link">配送说明</router-link></li>
+          <li><router-link to="/guide/faq" class="footer-link">常见问题</router-link></li>
+        </ul>
+      </div>
 
-        <div class="footer-section">
-          <h4 class="section-title">售后服务</h4>
-          <ul class="footer-links">
-            <li><router-link to="/service/return" class="footer-link">退换货政策</router-link></li>
-            <li><router-link to="/service/warranty" class="footer-link">质量保证</router-link></li>
-            <li><router-link to="/service/contact" class="footer-link">联系客服</router-link></li>
-            <li><router-link to="/service/feedback" class="footer-link">意见反馈</router-link></li>
-            <li><router-link to="/service/repair" class="footer-link">维修服务</router-link></li>
-          </ul>
-        </div>
+      <div class="footer-section">
+        <h4 class="section-title">售后服务</h4>
+        <ul class="footer-links">
+          <li><router-link to="/service/return" class="footer-link">退换货政策</router-link></li>
+          <li><router-link to="/service/warranty" class="footer-link">质量保证</router-link></li>
+          <li><router-link to="/service/contact" class="footer-link">联系客服</router-link></li>
+          <li><router-link to="/service/feedback" class="footer-link">意见反馈</router-link></li>
+          <li><router-link to="/service/repair" class="footer-link">维修服务</router-link></li>
+        </ul>
+      </div>
 
-        <div class="footer-section">
-          <h4 class="section-title">关于我们</h4>
-          <ul class="footer-links">
-            <li><router-link to="/about/company" class="footer-link">公司介绍</router-link></li>
-            <li><router-link to="/about/careers" class="footer-link">加入我们</router-link></li>
-            <li><router-link to="/about/news" class="footer-link">新闻动态</router-link></li>
-            <li><router-link to="/about/investor" class="footer-link">投资者关系</router-link></li>
-            <li>
-              <router-link to="/about/responsibility" class="footer-link">社会责任</router-link>
-            </li>
-          </ul>
-        </div>
+      <div class="footer-section">
+        <h4 class="section-title">关于我们</h4>
+        <ul class="footer-links">
+          <li><router-link to="/about/company" class="footer-link">公司介绍</router-link></li>
+          <li><router-link to="/about/careers" class="footer-link">加入我们</router-link></li>
+          <li><router-link to="/about/news" class="footer-link">新闻动态</router-link></li>
+          <li><router-link to="/about/investor" class="footer-link">投资者关系</router-link></li>
+          <li>
+            <router-link to="/about/responsibility" class="footer-link">社会责任</router-link>
+          </li>
+        </ul>
+      </div>
 
-        <!-- 联系信息 -->
-        <div class="footer-section contact-section">
-          <h4 class="section-title">联系我们</h4>
-          <div class="contact-info">
-            <div class="contact-item">
-              <div class="contact-icon">
-                <va-icon name="phone" color="primary" />
-              </div>
-              <div class="contact-details">
-                <span class="contact-label">客服热线</span>
-                <span class="contact-value">400-123-4567</span>
-              </div>
+      <!-- 联系信息 -->
+      <div class="footer-section contact-section">
+        <h4 class="section-title">联系我们</h4>
+        <div class="contact-info">
+          <div class="contact-item">
+            <div class="contact-icon">
+              <va-icon name="phone" color="primary" />
             </div>
-
-            <div class="contact-item">
-              <div class="contact-icon">
-                <va-icon name="email" color="primary" />
-              </div>
-              <div class="contact-details">
-                <span class="contact-label">邮箱</span>
-                <span class="contact-value">service@shopmart.com</span>
-              </div>
+            <div class="contact-details">
+              <span class="contact-label">客服热线</span>
+              <span class="contact-value">400-123-4567</span>
             </div>
+          </div>
 
-            <div class="contact-item">
-              <div class="contact-icon">
-                <va-icon name="schedule" color="primary" />
-              </div>
-              <div class="contact-details">
-                <span class="contact-label">服务时间</span>
-                <span class="contact-value">周一至周日 9:00-22:00</span>
-              </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <va-icon name="email" color="primary" />
             </div>
+            <div class="contact-details">
+              <span class="contact-label">邮箱</span>
+              <span class="contact-value">service@shopmart.com</span>
+            </div>
+          </div>
 
-            <div class="contact-item">
-              <div class="contact-icon">
-                <va-icon name="location_on" color="primary" />
-              </div>
-              <div class="contact-details">
-                <span class="contact-label">地址</span>
-                <span class="contact-value">湖北省武汉市江夏区佛祖岭街道高新二路129号</span>
-              </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <va-icon name="schedule" color="primary" />
+            </div>
+            <div class="contact-details">
+              <span class="contact-label">服务时间</span>
+              <span class="contact-value">周一至周日 9:00-22:00</span>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon">
+              <va-icon name="location_on" color="primary" />
+            </div>
+            <div class="contact-details">
+              <span class="contact-label">地址</span>
+              <span class="contact-value">湖北省武汉市江夏区佛祖岭街道高新二路129号</span>
             </div>
           </div>
         </div>
@@ -125,9 +111,6 @@
   margin-top: auto;
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   border-top: 1px solid var(--va-background-border);
-}
-
-.footer-main {
   padding: 3rem 0 2rem 0;
 }
 
@@ -142,10 +125,6 @@
 
 /* 品牌区域 */
 .footer-brand {
-  grid-column: 1;
-}
-
-.brand-section {
   max-width: 350px;
 }
 
@@ -319,5 +298,98 @@
   font-size: 0.9rem;
   color: var(--va-text-primary);
   font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .footer-container {
+    padding: 0 1rem;
+    gap: 2rem;
+  }
+
+  .footer-brand {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 992px) {
+  .footer-container {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+    max-width: none;
+    margin-bottom: 1rem;
+  }
+
+  .contact-section {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-footer {
+    padding: 2rem 0 1.5rem 0;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .footer-logo {
+    justify-content: center;
+  }
+
+  .contact-section {
+    grid-column: 1 / -1;
+  }
+
+  .contact-info {
+    grid-template-columns: 1fr 1fr;
+    display: grid;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .footer-section {
+    text-align: center;
+  }
+
+  .section-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .footer-link:hover {
+    transform: none;
+  }
+
+  .footer-link::before {
+    display: none;
+  }
+
+  .contact-info {
+    grid-template-columns: 1fr;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
 }
 </style>
