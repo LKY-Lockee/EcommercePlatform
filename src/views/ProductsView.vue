@@ -4,23 +4,20 @@
       <!-- 页面标题和筛选 -->
       <div class="page-header">
         <h1 class="page-title">商品列表</h1>
-        <div class="sort-controls">
-          <div class="products-controls">
-            <!-- 排序 -->
-            <div class="sort-controls">
-              <span class="sort-label">排序：</span>
-              <va-select
-                v-model="sortBy"
-                :options="sortOptions"
-                placeholder="选择排序方式"
-                text-by="text"
-                value-by="value"
-                background="#ffffff"
-                @update:model-value="loadProducts"
-              />
-            </div>
-            <span class="results-count"> 共 {{ pagination.total }} 件商品 </span>
+        <div class="products-controls">
+          <div class="sort-controls">
+            <span class="sort-label">排序：</span>
+            <va-select
+              v-model="sortBy"
+              :options="sortOptions"
+              placeholder="选择排序方式"
+              text-by="text"
+              value-by="value"
+              background="#ffffff"
+              @update:model-value="loadProducts"
+            />
           </div>
+          <span class="results-count">共 {{ pagination.total }} 件商品</span>
         </div>
       </div>
 
@@ -170,6 +167,7 @@ import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
 
+// 响应式数据
 const products = ref<Product[]>([])
 const categories = ref<Category[]>([])
 const loading = ref(false)
@@ -177,11 +175,7 @@ const searchQuery = ref('')
 const selectedCategory = ref<number | null>(null)
 const currentPage = ref(1)
 const sortBy = ref('created_at_desc')
-
-const priceRange = ref({
-  min: '',
-  max: '',
-})
+const priceRange = ref({ min: '', max: '' })
 
 const pagination = ref({
   current_page: 1,
@@ -190,6 +184,7 @@ const pagination = ref({
   total_pages: 1,
 })
 
+// 配置常量
 const sortOptions = [
   { text: '最新发布', value: 'created_at_desc' },
   { text: '价格从低到高', value: 'price_asc' },
@@ -206,6 +201,7 @@ const priceRanges = [
   { label: '2000以上', min: 2000, max: null },
 ]
 
+// 加载商品数据
 const loadProducts = async () => {
   loading.value = true
 
@@ -218,19 +214,11 @@ const loadProducts = async () => {
       sort_order: sortOrder.toUpperCase() as 'ASC' | 'DESC',
     }
 
-    if (selectedCategory.value) {
-      params.category_id = selectedCategory.value
-    }
-
-    if (searchQuery.value) {
-      params.search = searchQuery.value
-    }
-
-    // 添加价格筛选
+    if (selectedCategory.value) params.category_id = selectedCategory.value
+    if (searchQuery.value) params.search = searchQuery.value
     if (priceRange.value.min && !isNaN(Number(priceRange.value.min))) {
       params.min_price = Number(priceRange.value.min)
     }
-
     if (priceRange.value.max && !isNaN(Number(priceRange.value.max))) {
       params.max_price = Number(priceRange.value.max)
     }
@@ -245,6 +233,7 @@ const loadProducts = async () => {
   }
 }
 
+// 加载分类数据
 const loadCategories = async () => {
   try {
     const response = await categoryAPI.getCategories()
@@ -254,6 +243,7 @@ const loadCategories = async () => {
   }
 }
 
+// 筛选操作
 const applyFilters = () => {
   currentPage.value = 1
   loadProducts()
@@ -287,25 +277,17 @@ const selectCategory = (categoryId: number) => {
 watch(
   () => route.query,
   (newQuery) => {
-    if (newQuery.search) {
-      searchQuery.value = newQuery.search as string
-    }
-    if (newQuery.category) {
-      selectedCategory.value = Number(newQuery.category)
-    }
+    if (newQuery.search) searchQuery.value = newQuery.search as string
+    if (newQuery.category) selectedCategory.value = Number(newQuery.category)
     loadProducts()
   },
   { immediate: false },
 )
 
+// 初始化
 onMounted(() => {
-  // 从路由参数初始化筛选条件
-  if (route.query.search) {
-    searchQuery.value = route.query.search as string
-  }
-  if (route.query.category) {
-    selectedCategory.value = Number(route.query.category)
-  }
+  if (route.query.search) searchQuery.value = route.query.search as string
+  if (route.query.category) selectedCategory.value = Number(route.query.category)
 
   loadCategories()
   loadProducts()
@@ -313,6 +295,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 基础布局 */
 .products-view {
   min-height: 100vh;
   padding: 2rem 0;
@@ -324,6 +307,7 @@ onMounted(() => {
   padding: 0 1rem;
 }
 
+/* 页面头部 */
 .page-header {
   display: flex;
   align-items: center;
@@ -338,12 +322,37 @@ onMounted(() => {
   width: calc(280px + 1rem);
 }
 
+.products-controls {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sort-label {
+  font-weight: 600;
+  color: var(--va-text-primary);
+}
+
+.results-count {
+  color: var(--va-text-secondary);
+}
+
+/* 主要容器 */
 .products-container {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 2rem;
 }
 
+/* 侧边栏 */
 .filters-sidebar {
   height: fit-content;
   position: sticky;
@@ -362,8 +371,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-  color: white;
+  padding: 1.5rem 1.5rem 0.5rem;
 }
 
 .filter-title {
@@ -414,7 +422,7 @@ onMounted(() => {
   padding: 0.75rem 1.5rem 1.5rem;
 }
 
-/* 分类筛选样式 */
+/* 分类筛选 */
 .category-list {
   display: flex;
   flex-direction: column;
@@ -455,7 +463,7 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* 价格筛选样式 */
+/* 价格筛选 */
 .price-filter {
   display: flex;
   flex-direction: column;
@@ -470,14 +478,14 @@ onMounted(() => {
 
 .price-input {
   flex: 1;
-  min-width: 0; /* 防止flex项目溢出 */
+  min-width: 0;
 }
 
 .price-separator {
   font-weight: 500;
   color: var(--va-text-secondary);
   padding: 0;
-  flex-shrink: 0; /* 防止分隔符被压缩 */
+  flex-shrink: 0;
   font-size: 0.85rem;
 }
 
@@ -509,34 +517,11 @@ onMounted(() => {
   border-color: var(--va-primary);
 }
 
+/* 主要内容区 */
 .products-main {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.sort-controls {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 1rem;
-}
-
-.products-controls {
-  display: flex;
-  flex: 1;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-}
-
-.sort-label {
-  font-weight: 600;
-  color: var(--va-text-primary);
-}
-
-.results-count {
-  color: var(--va-text-secondary);
 }
 
 .loading-container {
@@ -560,7 +545,7 @@ onMounted(() => {
 }
 
 .no-products h3 {
-  margin: 1rem 0 0.5rem 0;
+  margin: 1rem 0 0.5rem;
   color: var(--va-text-primary);
 }
 
@@ -580,6 +565,7 @@ onMounted(() => {
   padding: 2rem 0;
 }
 
+/* 响应式设计 */
 @media (max-width: 1024px) {
   .products-container {
     grid-template-columns: 1fr;

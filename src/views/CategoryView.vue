@@ -4,23 +4,21 @@
       <!-- 分类头部 -->
       <div class="page-header">
         <h1 class="page-title">{{ categoryName }}</h1>
-        <div class="sort-controls">
-          <div class="products-controls">
-            <!-- 排序 -->
-            <div class="sort-controls">
-              <span class="sort-label">排序：</span>
-              <va-select
-                v-model="sortBy"
-                :options="sortOptions"
-                placeholder="选择排序方式"
-                text-by="text"
-                value-by="value"
-                background="#ffffff"
-                @update:model-value="loadProducts"
-              />
-            </div>
-            <span class="results-count"> 共 {{ totalProducts }} 件商品 </span>
+        <div class="header-controls">
+          <!-- 排序 -->
+          <div class="sort-controls">
+            <span class="sort-label">排序：</span>
+            <va-select
+              v-model="sortBy"
+              :options="sortOptions"
+              placeholder="选择排序方式"
+              text-by="text"
+              value-by="value"
+              background="#ffffff"
+              @update:model-value="loadProducts"
+            />
           </div>
+          <span class="results-count">共 {{ totalProducts }} 件商品</span>
         </div>
       </div>
 
@@ -138,7 +136,7 @@
             <va-icon name="inventory_2" size="4rem" color="secondary" />
             <h3 class="empty-title">暂无商品</h3>
             <p class="empty-description">该分类下暂时没有商品，请尝试其他分类或稍后再来看看</p>
-            <va-button color="primary" @click="$router.push('/products')"> 浏览所有商品 </va-button>
+            <va-button color="primary" @click="$router.push('/products')">浏览所有商品</va-button>
           </div>
 
           <!-- 商品网格 -->
@@ -172,21 +170,19 @@ import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
 
+// 响应式状态
 const loading = ref(false)
 const products = ref<Product[]>([])
 const categoryName = ref('商品分类')
-const categoryDescription = ref('')
 const searchQuery = ref('')
 const sortBy = ref('created_at')
-const priceRange = ref({
-  min: '',
-  max: '',
-})
+const priceRange = ref({ min: '', max: '' })
 const currentPage = ref(1)
 const pageSize = ref(20)
 const totalPages = ref(1)
 const totalProducts = ref(0)
 
+// 配置选项
 const sortOptions = [
   { text: '最新发布', value: 'created_at' },
   { text: '价格从低到高', value: 'price_asc' },
@@ -203,19 +199,20 @@ const priceRangeOptions = [
   { text: '5000元以上', value: '5000-' },
 ]
 
+// 加载分类信息
 const loadCategory = async () => {
   const categoryId = route.params.id as string
-  if (categoryId) {
-    try {
-      const response = await getCategory(parseInt(categoryId))
-      categoryName.value = response.data.name
-      categoryDescription.value = response.data.description || ''
-    } catch (error) {
-      console.error('加载分类信息失败:', error)
-    }
+  if (!categoryId) return
+
+  try {
+    const response = await getCategory(parseInt(categoryId))
+    categoryName.value = response.data.name
+  } catch (error) {
+    console.error('加载分类信息失败:', error)
   }
 }
 
+// 加载商品列表
 const loadProducts = async () => {
   try {
     loading.value = true
@@ -241,10 +238,10 @@ const loadProducts = async () => {
     }
 
     if (priceRange.value.min || priceRange.value.max) {
-      if (priceRange.value.min && !isNaN(Number(priceRange.value.min))) {
+      if (priceRange.value.min) {
         params.min_price = Number(priceRange.value.min)
       }
-      if (priceRange.value.max && !isNaN(Number(priceRange.value.max))) {
+      if (priceRange.value.max) {
         params.max_price = Number(priceRange.value.max)
       }
     }
@@ -252,12 +249,11 @@ const loadProducts = async () => {
     const response = await getProducts(params)
     products.value = response.data.products || response.data
 
-    // 如果API返回分页信息
+    // 设置分页信息
     if (response.data.pagination?.total) {
       totalProducts.value = response.data.pagination.total
       totalPages.value = Math.ceil(response.data.pagination.total / pageSize.value)
     } else {
-      // 如果没有分页信息，使用返回的商品数量
       totalProducts.value = Array.isArray(response.data)
         ? response.data.length
         : response.data.products?.length || 0
@@ -270,6 +266,7 @@ const loadProducts = async () => {
   }
 }
 
+// 事件处理函数
 const handleSearch = () => {
   currentPage.value = 1
   loadProducts()
@@ -294,7 +291,6 @@ const setPriceRange = (value: string) => {
     priceRange.value.min = min || ''
     priceRange.value.max = max || ''
   } else {
-    // 清空价格范围
     priceRange.value = { min: '', max: '' }
   }
   applyPriceFilter()
@@ -302,7 +298,6 @@ const setPriceRange = (value: string) => {
 
 const handlePageChange = () => {
   loadProducts()
-  // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -357,24 +352,15 @@ onMounted(() => {
   padding: 1rem;
 }
 
-.products-controls {
+.sort-controls {
   display: flex;
-  flex: 1;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  gap: 1rem;
 }
 
 .sort-label {
   font-weight: 600;
   color: var(--va-text-primary);
-}
-
-.sort-controls {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 1rem;
 }
 
 .results-count {
@@ -408,7 +394,6 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-  color: white;
 }
 
 .filter-title {
@@ -475,10 +460,6 @@ onMounted(() => {
   color: white;
 }
 
-.filter-select {
-  width: 100%;
-}
-
 /* 价格筛选 */
 .price-filter {
   display: flex;
@@ -494,15 +475,14 @@ onMounted(() => {
 
 .price-input {
   flex: 1;
-  min-width: 0; /* 防止flex项目溢出 */
+  min-width: 0;
 }
 
 .price-separator {
   font-weight: 500;
   color: var(--va-text-secondary);
-  padding: 0;
-  flex-shrink: 0; /* 防止分隔符被压缩 */
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .price-symbol {
@@ -540,8 +520,9 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
-/* 加载状态 */
-.loading-container {
+/* 加载和空状态 */
+.loading-container,
+.empty-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -554,16 +535,6 @@ onMounted(() => {
   margin-top: 16px;
   color: var(--va-text-secondary);
   font-size: 1rem;
-}
-
-/* 空状态 */
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
 }
 
 .empty-title {
@@ -609,7 +580,6 @@ onMounted(() => {
 
   .filters-sidebar {
     position: static;
-    max-height: none;
     order: 2;
   }
 
@@ -645,14 +615,6 @@ onMounted(() => {
     gap: 16px;
   }
 
-  .filters-container {
-    padding: 16px;
-  }
-
-  .products-main {
-    padding: 16px;
-  }
-
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
@@ -667,10 +629,6 @@ onMounted(() => {
     text-align: center;
     padding: 4px 0;
   }
-
-  .price-shortcut {
-    min-width: calc(50% - 3px);
-  }
 }
 
 @media (max-width: 480px) {
@@ -682,8 +640,8 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .price-shortcut {
-    min-width: 100%;
+  .price-shortcuts {
+    grid-template-columns: 1fr;
   }
 }
 </style>

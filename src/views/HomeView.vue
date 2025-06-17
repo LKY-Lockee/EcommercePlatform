@@ -77,12 +77,7 @@
           <p class="section-subtitle">精心挑选的优质商品</p>
         </div>
         <div class="products-grid">
-          <ProductCard
-            v-for="product in featuredProducts"
-            :key="product.id"
-            :product="product"
-            class="product-card-animate"
-          />
+          <ProductCard v-for="product in featuredProducts" :key="product.id" :product="product" />
         </div>
         <div class="section-footer">
           <va-button
@@ -134,42 +129,45 @@ import { productAPI, type Product } from '@/api/product'
 import { bannerAPI, type Banner } from '@/api/banner'
 import ProductCard from '@/components/ProductCard.vue'
 
+// 响应式数据
 const currentSlide = ref(0)
 const categories = ref<Category[]>([])
 const featuredProducts = ref<Product[]>([])
 const bannerItems = ref<Banner[]>([])
 
+// 默认轮播图数据
+const defaultBanner: Banner = {
+  id: 1,
+  title: '夏季大促销',
+  subtitle: '精选商品 5折起',
+  image_url: 'https://via.placeholder.com/1200x400/4f46e5/ffffff?text=夏季大促销',
+  link_url: '/products',
+  button_text: '立即抢购',
+  sort_order: 1,
+}
+
+// 加载轮播图数据
 const loadBanners = async () => {
   try {
     const response = await bannerAPI.getBanners()
     bannerItems.value = response.data
-    console.log('加载轮播图成功:', response.data)
   } catch (error) {
     console.error('加载轮播图失败:', error)
-    // 如果加载失败，使用默认的轮播图
-    bannerItems.value = [
-      {
-        id: 1,
-        title: '夏季大促销',
-        subtitle: '精选商品 5折起',
-        image_url: 'https://via.placeholder.com/1200x400/4f46e5/ffffff?text=夏季大促销',
-        link_url: '/products',
-        button_text: '立即抢购',
-        sort_order: 1,
-      },
-    ]
+    bannerItems.value = [defaultBanner]
   }
 }
 
+// 加载分类数据
 const loadCategories = async () => {
   try {
     const response = await categoryAPI.getCategories()
-    categories.value = response.data.slice(0, 8) // 只显示前8个分类
+    categories.value = response.data.slice(0, 8)
   } catch (error) {
     console.error('加载分类失败:', error)
   }
 }
 
+// 加载推荐商品
 const loadFeaturedProducts = async () => {
   try {
     const response = await productAPI.getFeaturedProducts(8)
@@ -179,6 +177,7 @@ const loadFeaturedProducts = async () => {
   }
 }
 
+// 初始化数据
 onMounted(() => {
   loadBanners()
   loadCategories()
@@ -187,6 +186,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 基础布局 */
 .home-view {
   min-height: 100vh;
 }
@@ -197,6 +197,7 @@ onMounted(() => {
   padding: 0 1rem;
 }
 
+/* 区块头部 */
 .section-header {
   text-align: center;
   margin-bottom: 3rem;
@@ -221,11 +222,9 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-/* 轮播图样式 */
+/* 轮播图区域 */
 .hero-section {
-  margin: 2rem;
-  margin-bottom: 5rem;
-  position: relative;
+  margin: 2rem 2rem 5rem;
 }
 
 .banner-loading {
@@ -249,10 +248,7 @@ onMounted(() => {
 .banner-slide::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
   backdrop-filter: blur(1px);
 }
@@ -281,7 +277,7 @@ onMounted(() => {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* 分类样式 */
+/* 商品分类区域 */
 .categories-section {
   margin-bottom: 5rem;
 }
@@ -297,13 +293,16 @@ onMounted(() => {
   transition: all 0.3s ease;
   text-align: center;
   border-radius: 16px;
-  position: relative;
   overflow: hidden;
 }
 
 .category-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.category-card:hover .category-arrow {
+  opacity: 1;
 }
 
 .category-image {
@@ -332,11 +331,7 @@ onMounted(() => {
   transition: opacity 0.3s ease;
 }
 
-.category-card:hover .category-arrow {
-  opacity: 1;
-}
-
-/* 推荐商品样式 */
+/* 推荐商品区域 */
 .featured-section {
   margin-bottom: 5rem;
 }
@@ -348,26 +343,11 @@ onMounted(() => {
   margin-bottom: 3rem;
 }
 
-.product-card-animate {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .section-footer {
   text-align: center;
 }
 
-/* 服务特色样式 */
+/* 服务特色区域 */
 .features-section {
   background: var(--va-background-secondary);
   padding: 5rem 0;
@@ -397,7 +377,7 @@ onMounted(() => {
 .feature-item h3 {
   font-size: 1.4rem;
   font-weight: 600;
-  margin: 1.5rem 0 1rem 0;
+  margin: 1.5rem 0 1rem;
   color: var(--va-text-primary);
 }
 
@@ -407,6 +387,7 @@ onMounted(() => {
   font-size: 1rem;
 }
 
+/* 响应式设计 */
 @media (max-width: 768px) {
   .banner-title {
     font-size: 2rem;
