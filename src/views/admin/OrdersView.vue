@@ -1,6 +1,5 @@
 <template>
   <div class="admin-orders">
-    <!-- 搜索和筛选 -->
     <div class="header-section">
       <div class="filter-section">
         <div class="filter-item">
@@ -36,7 +35,6 @@
       </div>
     </div>
 
-    <!-- 订单统计 -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-content">
@@ -87,7 +85,6 @@
       </div>
     </div>
 
-    <!-- 订单列表 -->
     <div class="orders-table">
       <va-data-table
         :items="orders"
@@ -147,7 +144,6 @@
       </va-data-table>
     </div>
 
-    <!-- 编辑订单弹窗 -->
     <va-modal
       v-model="showEditDialog"
       :title="'编辑订单'"
@@ -157,8 +153,7 @@
       class="order-modal"
     >
       <div class="order-form">
-        <va-form ref="orderFormRef" @submit.prevent="handleFormSubmit">
-          <!-- 订单状态卡片 -->
+        <va-form @submit.prevent="handleFormSubmit">
           <va-card class="form-card">
             <va-card-title class="form-section-title">订单状态</va-card-title>
             <va-card-content>
@@ -201,15 +196,12 @@ const submitting = ref(false)
 const showEditDialog = ref(false)
 const selectedOrder = ref<AdminOrder | null>(null)
 
-// 分页
 const pagination = ref({
   page: 1,
   perPage: 10,
   total: 0,
 })
 
-// 表单
-const orderFormRef = ref()
 const orderForm = ref({
   status: '' as OrderStatus | '',
 })
@@ -240,10 +232,8 @@ const columns = [
   { key: 'actions', label: '操作', width: 100 },
 ]
 
-// 表单验证规则
 const required = (value: unknown) => !!value || '此字段为必填项'
 
-// 更新分页
 const updatePagination = (newPagination: typeof pagination.value) => {
   pagination.value = { ...newPagination }
   loadOrders()
@@ -259,15 +249,11 @@ const loadOrders = async () => {
       limit: pagination.value.perPage,
     })
     const responseData = response.data
-    if (responseData && responseData.items) {
+    if (responseData?.items) {
       orders.value = responseData.items
-
-      // 更新分页信息
       if (responseData.pagination) {
         pagination.value.total = responseData.pagination.total
       }
-
-      // 计算统计信息
       stats.value = {
         total: responseData.pagination?.total || 0,
         completed: orders.value.filter((o) => o.status === 'delivered').length,
@@ -276,23 +262,12 @@ const loadOrders = async () => {
       }
     } else {
       orders.value = []
-      stats.value = {
-        total: 0,
-        completed: 0,
-        pending: 0,
-        cancelled: 0,
-      }
+      stats.value = { total: 0, completed: 0, pending: 0, cancelled: 0 }
     }
   } catch (error) {
     console.error('加载订单失败:', error)
-    console.log('加载订单失败')
     orders.value = []
-    stats.value = {
-      total: 0,
-      completed: 0,
-      pending: 0,
-      cancelled: 0,
-    }
+    stats.value = { total: 0, completed: 0, pending: 0, cancelled: 0 }
   } finally {
     loading.value = false
   }
@@ -300,9 +275,7 @@ const loadOrders = async () => {
 
 const editOrder = (order: AdminOrder) => {
   selectedOrder.value = order
-  orderForm.value = {
-    status: order.status,
-  }
+  orderForm.value = { status: order.status }
   showEditDialog.value = true
 }
 
@@ -310,21 +283,17 @@ const deleteOrder = async (order: AdminOrder) => {
   try {
     if (confirm(`确定要删除订单 ${order.order_number} 吗？`)) {
       await deleteAdminOrder(order.id)
-      console.log('订单删除成功')
       loadOrders()
     }
   } catch (error) {
     console.error('删除订单失败:', error)
-    console.log('删除订单失败')
   }
 }
 
 const closeEditDialog = () => {
   showEditDialog.value = false
   selectedOrder.value = null
-  orderForm.value = {
-    status: '',
-  }
+  orderForm.value = { status: '' }
 }
 
 const handleFormSubmit = async () => {
@@ -335,14 +304,10 @@ const handleFormSubmit = async () => {
     await updateAdminOrder(selectedOrder.value.id, {
       status: orderForm.value.status as OrderStatus,
     })
-
-    console.log('订单更新成功')
-
     closeEditDialog()
     loadOrders()
   } catch (error) {
     console.error('更新订单失败:', error)
-    console.log('更新订单失败')
   } finally {
     submitting.value = false
   }
@@ -380,9 +345,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-onMounted(() => {
-  loadOrders()
-})
+onMounted(loadOrders)
 </script>
 
 <style scoped>
@@ -424,14 +387,10 @@ onMounted(() => {
   padding-right: 40px;
 }
 
-.search-input :deep(.va-input__container):hover {
-  border-color: var(--va-primary);
-  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.1);
-}
-
+.search-input :deep(.va-input__container):hover,
 .search-input :deep(.va-input__container--focused) {
   border-color: var(--va-primary);
-  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.1);
 }
 
 .stats-grid {
@@ -475,15 +434,12 @@ onMounted(() => {
 .stat-icon.total {
   background: var(--va-primary);
 }
-
 .stat-icon.completed {
   background: #10b981;
 }
-
 .stat-icon.pending {
   background: #f59e0b;
 }
-
 .stat-icon.cancelled {
   background: #ef4444;
 }
@@ -568,7 +524,6 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-/* 弹窗样式 */
 .order-modal :deep(.va-modal__container) {
   border-radius: 12px;
   overflow: hidden;
@@ -638,7 +593,6 @@ onMounted(() => {
     flex-direction: column;
     gap: 1rem;
   }
-
   .filter-section {
     flex-direction: column;
   }
@@ -648,43 +602,27 @@ onMounted(() => {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-
   .orders-table {
     padding: 1rem;
   }
-
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .modal-actions {
-    flex-direction: column;
   }
 }
 
 @media (max-width: 480px) {
-  .header-section {
-    padding: 1rem;
-  }
-
+  .header-section,
   .stat-card {
     padding: 1rem;
   }
-
   .stat-content {
     gap: 0.75rem;
   }
-
   .stat-icon {
     width: 40px;
     height: 40px;
     font-size: 1rem;
   }
-
   .stat-number {
     font-size: 1.25rem;
   }

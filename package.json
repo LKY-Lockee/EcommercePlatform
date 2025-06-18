@@ -14,7 +14,7 @@
 		"server": "node server/index.js",
 		"server:dev": "tsx server/index.ts",
 		"server:build": "tsc --project tsconfig.server.json",
-		"dev:all": "concurrently \"npm run dev\" \"npm run server:dev\""
+		"dev:all": "concurrently \"npm run server:dev\" \"npm run dev\""
 	},
 	"dependencies": {
 		"@types/bcryptjs": "^2.4.6",

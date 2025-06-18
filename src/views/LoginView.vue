@@ -69,13 +69,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useToast } from 'vuestic-ui'
+import type { LoginData } from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
-const { notify } = useToast()
 
-const loginForm = ref({
+const loginForm = ref<LoginData>({
   username: '',
   password: '',
 })
@@ -84,25 +83,17 @@ const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
 
+// 验证规则
 const required = (value: string) => !!value || '此字段是必填的'
 
 const handleLogin = async () => {
-  if (!loginForm.value.username.trim() || !loginForm.value.password.trim()) return
-
   loading.value = true
   try {
     const result = await userStore.login(loginForm.value)
     if (result.success) {
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/')
-    } else {
-      notify({
-        message: result.message || '登录失败',
-        color: 'danger',
-      })
     }
-  } catch (error) {
-    console.error('登录错误:', error)
   } finally {
     loading.value = false
   }
@@ -229,12 +220,8 @@ const handleForgotPassword = () => {
     padding: 1rem 0.5rem;
   }
 
-  .login-container {
-    max-width: 100%;
-  }
-
   .card-header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem;
   }
 
   .login-title {

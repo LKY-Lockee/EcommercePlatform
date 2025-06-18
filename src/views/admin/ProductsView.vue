@@ -1,6 +1,5 @@
 <template>
   <div class="admin-products">
-    <!-- 搜索和筛选 -->
     <div class="header-section">
       <div class="filter-section">
         <div class="filter-item">
@@ -36,7 +35,6 @@
       <va-button @click="openCreateDialog" icon="add"> 添加商品 </va-button>
     </div>
 
-    <!-- 商品列表 -->
     <div class="products-table">
       <va-data-table
         :items="products"
@@ -94,7 +92,6 @@
       </va-data-table>
     </div>
 
-    <!-- 创建/编辑商品对话框 -->
     <va-modal
       v-model="showProductDialog"
       :title="isEditing ? '编辑商品' : '添加商品'"
@@ -105,7 +102,6 @@
     >
       <div class="product-form">
         <va-form ref="productFormRef" @submit.prevent="handleFormSubmit">
-          <!-- 基本信息卡片 -->
           <va-card class="form-card">
             <va-card-title class="form-section-title">基本信息</va-card-title>
             <va-card-content>
@@ -166,7 +162,6 @@
             </va-card-content>
           </va-card>
 
-          <!-- 价格与库存卡片 -->
           <va-card class="form-card">
             <va-card-title class="form-section-title">价格与库存</va-card-title>
             <va-card-content>
@@ -216,7 +211,6 @@
             </va-card-content>
           </va-card>
 
-          <!-- 商品图片与设置卡片 -->
           <va-card class="form-card">
             <va-card-title class="form-section-title">商品图片与设置</va-card-title>
             <va-card-content>
@@ -247,7 +241,6 @@
             </va-card-content>
           </va-card>
 
-          <!-- 表单操作按钮 -->
           <div class="form-actions">
             <va-button @click="cancelForm" preset="secondary" size="large"> 取消 </va-button>
             <va-button
@@ -281,7 +274,6 @@ const isEditing = ref(false)
 const formSubmitting = ref(false)
 const productFormRef = ref()
 
-// 统一的商品表单数据（前端使用布尔值便于操作）
 const productForm = ref({
   name: '',
   description: '',
@@ -322,7 +314,6 @@ const formCategoryOptions = computed(() =>
   categories.value.map((cat) => ({ text: cat.name, value: cat.id })),
 )
 
-// 表单验证规则
 const required = (value: unknown) => !!value || '此字段为必填项'
 const minValue = (value: string | number) => {
   const num = typeof value === 'string' ? parseFloat(value) : value
@@ -347,7 +338,6 @@ const loadProducts = async () => {
       search: searchQuery.value,
     }
 
-    // 只有当 selectedCategory 有值且不是 undefined 时才添加 category_id
     if (selectedCategory.value !== undefined && selectedCategory.value !== null) {
       params.category_id = selectedCategory.value
     }
@@ -372,12 +362,7 @@ const loadCategories = async () => {
   try {
     const response = await getCategories()
     const categoriesData = response.data
-    if (Array.isArray(categoriesData)) {
-      categories.value = categoriesData
-    } else {
-      console.warn('分类数据格式不正确:', categoriesData)
-      categories.value = []
-    }
+    categories.value = Array.isArray(categoriesData) ? categoriesData : []
   } catch (error) {
     console.error('加载分类失败:', error)
     categories.value = []
@@ -404,7 +389,7 @@ const editProduct = (product: AdminProduct) => {
     category_id: product.category_id,
     brand: product.brand || '',
     sku: product.sku,
-    featured: Boolean(product.featured), // 数字转布尔值
+    featured: Boolean(product.featured),
     image: product.image || '',
     id: product.id,
   }
@@ -412,14 +397,12 @@ const editProduct = (product: AdminProduct) => {
   showProductDialog.value = true
 }
 
-// 打开创建对话框
 const openCreateDialog = () => {
   resetProductForm()
   isEditing.value = false
   showProductDialog.value = true
 }
 
-// 重置商品表单
 const resetProductForm = () => {
   productForm.value = {
     name: '',
@@ -436,7 +419,6 @@ const resetProductForm = () => {
   }
 }
 
-// 统一的表单提交处理
 const handleFormSubmit = async () => {
   try {
     const isValid = await productFormRef.value?.validate()
@@ -444,7 +426,6 @@ const handleFormSubmit = async () => {
       formSubmitting.value = true
 
       if (isEditing.value) {
-        // 编辑商品
         if (productForm.value.id) {
           const updateData = {
             name: productForm.value.name,
@@ -455,14 +436,13 @@ const handleFormSubmit = async () => {
             category_id: productForm.value.category_id,
             brand: productForm.value.brand,
             sku: productForm.value.sku,
-            featured: productForm.value.featured ? 1 : 0, // 布尔值转数字
+            featured: productForm.value.featured ? 1 : 0,
             image: productForm.value.image || '',
           }
 
           await updateProduct(productForm.value.id, updateData)
         }
       } else {
-        // 创建商品
         const createData = {
           name: productForm.value.name || '',
           description: productForm.value.description || '',
@@ -472,7 +452,7 @@ const handleFormSubmit = async () => {
           category_id: productForm.value.category_id || 0,
           brand: productForm.value.brand,
           sku: productForm.value.sku || '',
-          featured: productForm.value.featured ? 1 : 0, // 布尔值转数字
+          featured: productForm.value.featured ? 1 : 0,
           image: productForm.value.image || '',
         }
 
@@ -490,7 +470,6 @@ const handleFormSubmit = async () => {
   }
 }
 
-// 取消表单
 const cancelForm = () => {
   showProductDialog.value = false
   resetProductForm()
@@ -537,20 +516,6 @@ onMounted(() => {
 .admin-products {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--va-text-primary);
 }
 
 .header-section {
@@ -669,7 +634,6 @@ onMounted(() => {
   color: #d97706;
 }
 
-/* 商品表单样式 */
 .product-modal :deep(.va-modal__title) {
   font-size: 1.5rem;
   font-weight: 700;
@@ -680,7 +644,6 @@ onMounted(() => {
   padding: 0 4px;
 }
 
-/* CSS Grid 布局 */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -728,7 +691,6 @@ onMounted(() => {
   justify-content: flex-start;
 }
 
-/* 响应式布局 */
 @media (max-width: 768px) {
   .form-grid,
   .form-grid-three,
@@ -822,7 +784,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* 表单输入框样式增强 */
 .product-form :deep(.va-input__container) {
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -851,18 +812,7 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
   .header-section {
     padding: 1rem;
     flex-direction: column;
@@ -894,7 +844,6 @@ onMounted(() => {
   }
 }
 
-/* 滚动条样式 */
 .product-form::-webkit-scrollbar {
   width: 6px;
 }

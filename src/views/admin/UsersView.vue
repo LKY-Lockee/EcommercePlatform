@@ -1,6 +1,5 @@
 <template>
   <div class="admin-users">
-    <!-- 搜索和筛选 -->
     <div class="header-section">
       <div class="filter-section">
         <div class="filter-item">
@@ -36,7 +35,6 @@
       </div>
     </div>
 
-    <!-- 用户统计 -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-content">
@@ -87,7 +85,6 @@
       </div>
     </div>
 
-    <!-- 用户列表 -->
     <div class="users-table">
       <va-data-table
         :items="users"
@@ -134,7 +131,6 @@
       </va-data-table>
     </div>
 
-    <!-- 编辑用户弹窗 -->
     <va-modal
       v-model="showEditDialog"
       :title="'编辑用户'"
@@ -145,7 +141,6 @@
     >
       <div class="user-form">
         <va-form ref="userFormRef" @submit.prevent="handleFormSubmit">
-          <!-- 用户信息卡片 -->
           <va-card class="form-card">
             <va-card-title class="form-section-title">用户信息</va-card-title>
             <va-card-content>
@@ -221,14 +216,12 @@ const submitting = ref(false)
 const showEditDialog = ref(false)
 const selectedUser = ref<AdminUser | null>(null)
 
-// 分页
 const pagination = ref({
   page: 1,
   perPage: 20,
   total: 0,
 })
 
-// 表单
 const userFormRef = ref()
 const userForm = ref({
   username: '',
@@ -237,7 +230,6 @@ const userForm = ref({
   role: '' as 'admin' | 'user' | '',
 })
 
-// 统计数据
 const stats = ref({
   total: 0,
   admin: 0,
@@ -262,14 +254,12 @@ const columns = [
   { key: 'actions', label: '操作', width: 100 },
 ]
 
-// 表单验证规则
 const required = (value: unknown) => !!value || '此字段为必填项'
 const emailRule = (value: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(value) || '请输入有效的邮箱地址'
 }
 
-// 更新分页
 const updatePagination = (newPagination: typeof pagination.value) => {
   pagination.value = { ...newPagination }
   loadUsers()
@@ -288,12 +278,10 @@ const loadUsers = async () => {
     if (responseData && responseData.items) {
       users.value = responseData.items
 
-      // 更新分页信息
       if (responseData.pagination) {
         pagination.value.total = responseData.pagination.total_pages
       }
 
-      // 计算统计信息
       const currentMonth = new Date().getMonth()
       const currentYear = new Date().getFullYear()
 
@@ -417,9 +405,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-onMounted(() => {
-  loadUsers()
-})
+onMounted(loadUsers)
 </script>
 
 <style scoped>
@@ -566,7 +552,6 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-/* 弹窗样式 */
 .user-modal :deep(.va-modal__container) {
   border-radius: 12px;
   overflow: hidden;
@@ -642,16 +627,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f8fafc;
-  margin: 0;
-}
-
 @media (max-width: 1024px) {
   .header-section {
     flex-direction: column;
@@ -674,10 +649,6 @@ onMounted(() => {
 
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .modal-actions {
-    flex-direction: column;
   }
 }
 

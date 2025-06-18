@@ -109,11 +109,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import type { RegisterData } from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const registerForm = ref({
+const registerForm = ref<RegisterData>({
   username: '',
   email: '',
   phone: '',
@@ -125,6 +126,7 @@ const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
 
+// 验证规则
 const required = (value: string) => !!value || '此字段是必填的'
 
 const usernameRule = (value: string) => {
@@ -135,14 +137,12 @@ const usernameRule = (value: string) => {
 }
 
 const emailRule = (value: string) => {
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailPattern.test(value) || '请输入有效的邮箱地址'
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || '请输入有效的邮箱地址'
 }
 
 const phoneRule = (value: string) => {
   if (!value) return true
-  const phonePattern = /^1[3-9]\d{9}$/
-  return phonePattern.test(value) || '请输入有效的手机号'
+  return /^1[3-9]\d{9}$/.test(value) || '请输入有效的手机号'
 }
 
 const passwordRule = (value: string) => {
@@ -157,24 +157,15 @@ const confirmPasswordRule = (value: string) => {
 }
 
 const handleRegister = async () => {
-  if (!validateForm()) return
-
   loading.value = true
   try {
     const result = await userStore.register(registerForm.value)
     if (result.success) {
       router.push('/')
     }
-  } catch (error) {
-    console.error('注册错误:', error)
   } finally {
     loading.value = false
   }
-}
-
-const validateForm = () => {
-  const { username, email, password } = registerForm.value
-  return username.trim() && email.trim() && password.trim() && password === confirmPassword.value
 }
 </script>
 
@@ -292,12 +283,8 @@ const validateForm = () => {
     padding: 1rem 0.5rem;
   }
 
-  .register-container {
-    max-width: 100%;
-  }
-
   .card-header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem;
   }
 
   .register-title {

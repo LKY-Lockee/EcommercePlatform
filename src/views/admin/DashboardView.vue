@@ -1,6 +1,5 @@
 <template>
   <div class="dashboard">
-    <!-- 统计卡片 -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-content">
@@ -51,7 +50,6 @@
       </div>
     </div>
 
-    <!-- 最近订单 -->
     <div class="recent-orders">
       <h3 class="section-title">最近订单</h3>
       <div class="orders-table-container">
@@ -107,39 +105,22 @@ const loadStats = async () => {
   try {
     loading.value = true
     const response = await getDashboardStats()
-    const statsData = response.data
-    if (statsData) {
-      stats.value = statsData
-    } else {
-      console.warn('统计数据格式不正确:', statsData)
-      stats.value = {
-        users: 0,
-        products: 0,
-        orders: 0,
-        revenue: 0,
-        recentOrders: [],
-      }
-    }
-  } catch (error) {
-    console.error('加载统计数据失败:', error)
-    stats.value = {
+    stats.value = response.data || {
       users: 0,
       products: 0,
       orders: 0,
       revenue: 0,
       recentOrders: [],
     }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
   } finally {
     loading.value = false
   }
 }
 
 const formatMoney = (amount: number | null | undefined) => {
-  // 处理空值和非数字值
-  if (amount == null || isNaN(amount)) {
-    return '0.00'
-  }
-
+  if (amount == null || isNaN(amount)) return '0.00'
   return new Intl.NumberFormat('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -147,18 +128,9 @@ const formatMoney = (amount: number | null | undefined) => {
 }
 
 const formatDate = (dateStr: string | null | undefined) => {
-  // 处理空值和无效日期字符串
-  if (!dateStr) {
-    return '无'
-  }
-
+  if (!dateStr) return '无'
   const date = new Date(dateStr)
-
-  // 检查日期是否有效
-  if (isNaN(date.getTime())) {
-    return '无效日期'
-  }
-
+  if (isNaN(date.getTime())) return '无效日期'
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -179,9 +151,7 @@ const getStatusText = (status: string) => {
   return texts[status] || status
 }
 
-onMounted(() => {
-  loadStats()
-})
+onMounted(loadStats)
 </script>
 
 <style scoped>

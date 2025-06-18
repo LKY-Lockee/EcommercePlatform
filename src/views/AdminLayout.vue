@@ -131,17 +131,15 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const getPageTitle = () => {
-  const titleMap: Record<string, string> = {
-    '/admin/dashboard': '仪表盘',
-    '/admin/products': '商品管理',
-    '/admin/categories': '分类管理',
-    '/admin/orders': '订单管理',
-    '/admin/users': '用户管理',
-  }
-
-  return titleMap[route.path] || '管理后台'
+const titleMap: Record<string, string> = {
+  '/admin/dashboard': '仪表盘',
+  '/admin/products': '商品管理',
+  '/admin/categories': '分类管理',
+  '/admin/orders': '订单管理',
+  '/admin/users': '用户管理',
 }
+
+const getPageTitle = () => titleMap[route.path] || '管理后台'
 
 const handleLogout = async () => {
   userStore.logout()
