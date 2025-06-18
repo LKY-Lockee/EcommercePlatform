@@ -25,9 +25,9 @@
             <div class="main-image">
               <img :src="currentImage" :alt="product.name" class="main-img" />
             </div>
-            <div v-if="product.images && product.images.length > 1" class="thumbnail-list">
+            <div v-if="productImages.length > 1" class="thumbnail-list">
               <img
-                v-for="(image, index) in product.images"
+                v-for="(image, index) in productImages"
                 :key="index"
                 :src="image.image_url"
                 :alt="`${product.name} ${index + 1}`"
@@ -128,9 +128,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { productAPI, type Product } from '@/api/product'
+import { getProductDetail } from '@/api/product'
+import type { Product, ProductImage } from '@/types'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
 
@@ -144,25 +145,52 @@ const loading = ref(false)
 const quantity = ref(1)
 const currentImage = ref('')
 
+// 计算属性：统一处理图片格式
+const productImages = computed(() => {
+  if (!product.value?.images || !Array.isArray(product.value.images)) {
+    return []
+  }
+
+  return product.value.images.map((img, index) => {
+    if (typeof img === 'string') {
+      return { image_url: img, is_primary: index === 0 }
+    } else {
+      return img as ProductImage
+    }
+  })
+})
+
 const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
 
 const getInitialImage = (product: Product): string => {
-  if (product.images?.length) {
-    return product.images.find((img) => img.is_primary)?.image_url || product.images[0].image_url
+  if (product.primary_image) {
+    return product.primary_image
   }
-  return product.primary_image || 'https://via.placeholder.com/500x500?text=No+Image'
+
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    const firstImage = product.images[0]
+    if (typeof firstImage === 'string') {
+      return firstImage
+    } else {
+      // 如果是 ProductImage 对象，寻找主图或返回第一张
+      const primaryImage = (product.images as ProductImage[]).find((img) => img.is_primary)
+      return primaryImage?.image_url || (product.images[0] as ProductImage).image_url
+    }
+  }
+
+  return 'https://via.placeholder.com/500x500?text=No+Image'
 }
 
 const loadProduct = async () => {
   loading.value = true
   try {
     const productId = Number(route.params.id)
-    const response = await productAPI.getProduct(productId)
-    product.value = response.data
-    currentImage.value = getInitialImage(response.data)
+    const response = await getProductDetail(productId)
+    product.value = response.data.data
+    currentImage.value = getInitialImage(response.data.data)
   } catch {
     product.value = null
   } finally {

@@ -124,7 +124,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getOrderDetail, payOrder, type Order } from '@/api/order'
+import { getOrderDetail, payOrder } from '@/api/order'
+import type { Order } from '@/types'
 import { useCartStore } from '@/stores/cart'
 
 const route = useRoute()
@@ -161,7 +162,7 @@ const loadOrder = async () => {
   try {
     const orderId = parseInt(route.params.id as string)
     const response = await getOrderDetail(orderId)
-    order.value = response.data
+    order.value = response.data.data
   } catch (error) {
     console.error('加载订单失败:', error)
     router.push('/user/orders')

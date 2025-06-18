@@ -115,12 +115,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import {
-  getOrders,
+  getUserOrders,
   cancelOrder as cancelOrderAPI,
   payOrder as payOrderAPI,
   confirmOrder as confirmOrderAPI,
-  type Order,
 } from '@/api/order'
+import type { Order } from '@/types'
 import { useCartStore } from '@/stores/cart'
 
 const cartStore = useCartStore()
@@ -153,10 +153,10 @@ const filteredOrders = computed(() => {
 const loadOrders = async (page = 1) => {
   loading.value = true
   try {
-    const response = await getOrders()
-    orders.value = response.data || []
+    const response = await getUserOrders({ page })
+    orders.value = response.data.data?.items || []
     currentPage.value = page
-    totalPages.value = 1
+    totalPages.value = response.data.data?.totalPages || 1
   } catch {
     orders.value = []
   } finally {

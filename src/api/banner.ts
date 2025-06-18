@@ -1,19 +1,10 @@
-import api from './index'
+import request from './index'
+import type { Banner, ApiResponse } from '@/types'
 
-export interface Banner {
-  id: number
-  title: string
-  subtitle?: string
-  image_url: string
-  link_url?: string
-  button_text: string
-  sort_order: number
-}
+// ===== Banner横幅广告相关 =====
 
-export const bannerAPI = {
-  // 获取活跃的轮播图
-  getBanners: () => api.get<Banner[]>('/banners'),
+// 获取活跃的横幅列表
+export const getBanners = () => request.get<ApiResponse<Banner[]>>('/banners')
 
-  // 获取轮播图详情
-  getBannerById: (id: number) => api.get<Banner>(`/banners/${id}`),
-}
+// 获取横幅详情
+export const getBannerDetail = (id: number) => request.get<ApiResponse<Banner>>(`/banners/${id}`)

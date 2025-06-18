@@ -136,7 +136,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { createOrder } from '@/api/order'
-import { userAPI, type Address } from '@/api/user'
+import { getUserAddresses } from '@/api/user'
+import type { Address } from '@/types'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -176,10 +177,10 @@ const canSubmit = computed(
 
 const loadAddresses = async () => {
   try {
-    const response = await userAPI.getAddresses()
-    addresses.value = response.data
+    const response = await getUserAddresses()
+    addresses.value = response.data.data
     selectedAddress.value =
-      addresses.value.find((addr) => addr.is_default) || addresses.value[0] || null
+      addresses.value.find((addr: Address) => addr.is_default) || addresses.value[0] || null
   } catch (error) {
     console.error('加载地址失败:', error)
     addresses.value = [
@@ -224,7 +225,7 @@ const handleSubmitOrder = async () => {
     }
 
     const response = await createOrder(orderData)
-    router.push(`/payment/${response.data.order.id}`)
+    router.push(`/payment/${response.data.data.id}`)
   } catch (error) {
     console.error('创建订单失败:', error)
   } finally {

@@ -67,7 +67,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminUsers, deleteUser, type AdminUser } from '@/api/admin'
+import { getAdminUsers, deleteUser } from '@/api/admin'
+import type { AdminUser } from '@/types'
 
 const loading = ref(false)
 const users = ref<AdminUser[]>([])
@@ -97,8 +98,8 @@ const loadUsers = async () => {
       limit: pagination.value.perPage,
       search: searchQuery.value,
     })
-    users.value = response.data.users || []
-    pagination.value.total = response.data.total
+    users.value = response.data.data.items || []
+    pagination.value.total = response.data.data.total
   } catch (error) {
     console.error('加载用户失败:', error)
   } finally {

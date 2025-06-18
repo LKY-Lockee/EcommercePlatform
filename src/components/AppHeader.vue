@@ -202,7 +202,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
-import { categoryAPI, type Category } from '@/api/category'
+import { getCategories } from '@/api/category'
+import type { Category } from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -230,8 +231,8 @@ const handleLogout = () => {
 // 加载分类数据
 const loadCategories = async () => {
   try {
-    const response = await categoryAPI.getCategories()
-    categories.value = response.data
+    const response = await getCategories()
+    categories.value = response.data.data
   } catch (error) {
     console.error('加载分类失败:', error)
   }

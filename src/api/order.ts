@@ -1,62 +1,62 @@
 import request from './index'
+import type {
+  Order,
+  OrderCreateData,
+  OrderListParams,
+  PaginationResponse,
+  ApiResponse,
+} from '@/types'
 
-export interface Order {
-  id: number
-  order_number: string
-  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
-  total_amount: number
-  shipping_address: string
-  payment_method: string
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
-  created_at: string
-  items?: OrderItem[]
-}
-
-export interface OrderItem {
-  id: number
-  order_id: number
-  product_id: number
-  product_name: string
-  product_price: number
-  quantity: number
-  subtotal: number
-}
-
-export interface CreateOrderData {
-  shipping_address: string
-  payment_method: string
-  cart_items: Array<{
-    product_id: number
-    quantity: number
-  }>
-}
+// ===== 用户订单相关 =====
 
 // 创建订单
-export const createOrder = (data: CreateOrderData) => {
-  return request.post<{ message: string; order: Partial<Order> }>('/orders/create', data)
-}
+export const createOrder = (data: OrderCreateData) =>
+  request.post<ApiResponse<Order>>('/orders', data)
 
-// 获取订单列表
-export const getOrders = () => {
-  return request.get<Order[]>('/orders')
-}
+// 获取用户订单列表
+export const getUserOrders = (params?: OrderListParams) =>
+  request.get<ApiResponse<PaginationResponse<Order>>>('/orders', { params })
 
 // 获取订单详情
-export const getOrderDetail = (id: number) => {
-  return request.get<Order>(`/orders/${id}`)
-}
+export const getOrderDetail = (id: number) => request.get<ApiResponse<Order>>(`/orders/${id}`)
 
 // 取消订单
-export const cancelOrder = (id: number) => {
-  return request.put(`/orders/${id}/cancel`)
-}
+export const cancelOrder = (id: number) =>
+  request.put<ApiResponse<{ message: string }>>(`/orders/${id}/cancel`)
 
 // 支付订单
-export const payOrder = (id: number) => {
-  return request.put(`/orders/${id}/pay`)
-}
+export const payOrder = (id: number, paymentMethod?: string) =>
+  request.put<ApiResponse<{ message: string }>>(`/orders/${id}/pay`, { paymentMethod })
 
 // 确认收货
-export const confirmOrder = (id: number) => {
-  return request.put(`/orders/${id}/confirm`)
-}
+export const confirmOrder = (id: number) =>
+  request.put<ApiResponse<{ message: string }>>(`/orders/${id}/confirm`)
+
+// ===== 管理员订单管理 =====
+
+// 获取所有订单列表
+export const getAdminOrders = (params?: OrderListParams) =>
+  request.get<ApiResponse<PaginationResponse<Order>>>('/admin/orders', { params })
+
+// 更新订单状态
+export const updateOrderStatus = (id: number, status: string) =>
+  request.put<ApiResponse<{ message: string }>>(`/admin/orders/${id}/status`, { status })
+
+// 发货
+export const shipOrder = (id: number, trackingNumber?: string) =>
+  request.put<ApiResponse<{ message: string }>>(`/admin/orders/${id}/ship`, { trackingNumber })
+
+// 完成订单
+export const completeOrder = (id: number) =>
+  request.put<ApiResponse<{ message: string }>>(`/admin/orders/${id}/complete`)
+
+// 删除订单
+export const deleteOrder = (id: number) =>
+  request.delete<ApiResponse<{ message: string }>>(`/admin/orders/${id}`)
+
+// 批量更新订单状态
+export const batchUpdateOrderStatus = (ids: number[], status: string) =>
+  request.post<ApiResponse<{ message: string }>>('/admin/orders/batch-update-status', {
+    ids,
+    status,
+  })

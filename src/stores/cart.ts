@@ -1,9 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Product } from '@/api/product'
-import { cartAPI } from '@/api/cart'
+import type { CartItem as ApiCartItem, Product, CartItemData } from '@/types'
+import {
+  getCart as getCartAPI,
+  addToCart as addToCartAPI,
+  updateCartItem as updateCartItemAPI,
+  removeFromCart as removeFromCartAPI,
+  clearCart as clearCartAPI,
+} from '@/api/cart'
 import { useUserStore } from './user'
 
+// Store 中使用的简化购物车项目接口
 export interface CartItem {
   id: number
   product: Product
@@ -46,31 +53,15 @@ export const useCartStore = defineStore('cart', () => {
     loading.value = true
     try {
       console.log('请求购物车数据...')
-      const response = await cartAPI.getCart()
+      const response = await getCartAPI()
       console.log('购物车API响应:', response.data)
 
-      // 将服务端数据转换为本地格式
-      items.value = response.data.map((item) => ({
+      // 将 API 响应的 CartItem[] 转换为 Store 中使用的格式
+      items.value = response.data.data.map((item: ApiCartItem) => ({
         id: item.id,
-        product: {
-          id: item.product_id,
-          name: item.name,
-          description: '', // 购物车API没有返回描述，先设为空
-          price: item.price,
-          original_price: item.price, // 如果没有原价，使用当前价格
-          stock: item.stock,
-          category_id: 0, // 购物车API没有返回分类，先设为0
-          status: 'active',
-          featured: false,
-          views: 0,
-          sales: 0,
-          rating: 0,
-          rating_count: 0,
-          primary_image: item.image_url,
-          created_at: new Date().toISOString(),
-        } as Product,
+        product: item.product,
         quantity: item.quantity,
-        selected: true,
+        selected: item.selected,
       }))
       console.log('购物车数据已更新:', items.value)
     } catch (error) {
@@ -109,7 +100,8 @@ export const useCartStore = defineStore('cart', () => {
 
     try {
       console.log('发送API请求:', { product_id: product.id, quantity })
-      const response = await cartAPI.addToCart({ product_id: product.id, quantity })
+      const data: CartItemData = { product_id: product.id, quantity }
+      const response = await addToCartAPI(data)
       console.log('API响应:', response)
       await fetchCart()
       console.log('购物车已更新')
@@ -137,7 +129,7 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     try {
-      await cartAPI.updateCartItem(itemId, quantity)
+      await updateCartItemAPI(itemId, quantity)
       await fetchCart()
     } catch (error) {
       console.error('更新商品数量失败:', error)
@@ -158,7 +150,7 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     try {
-      await cartAPI.removeFromCart(itemId)
+      await removeFromCartAPI(itemId)
       await fetchCart()
     } catch (error) {
       console.error('移除商品失败:', error)
@@ -198,7 +190,7 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     try {
-      await cartAPI.clearCart()
+      await clearCartAPI()
       items.value = []
     } catch (error) {
       console.error('清空购物车失败:', error)
@@ -220,7 +212,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // 逐个删除选中的商品
       for (const itemId of selectedItemIds) {
-        await cartAPI.removeFromCart(itemId)
+        await removeFromCartAPI(itemId)
       }
       await fetchCart()
     } catch (error) {
@@ -256,10 +248,11 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // 将本地购物车商品添加到服务端
       for (const item of items.value) {
-        await cartAPI.addToCart({
+        const data: CartItemData = {
           product_id: item.product.id,
           quantity: item.quantity,
-        })
+        }
+        await addToCartAPI(data)
       }
 
       // 清空本地购物车并从服务端重新获取

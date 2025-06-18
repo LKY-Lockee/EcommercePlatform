@@ -60,7 +60,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getCategories, type Category } from '@/api/category'
+import { getCategories } from '@/api/category'
+import type { Category } from '@/types'
 
 const loading = ref(false)
 const categories = ref<Category[]>([])
@@ -82,7 +83,7 @@ const loadCategories = async () => {
   try {
     loading.value = true
     const response = await getCategories()
-    categories.value = response.data
+    categories.value = response.data.data
   } catch (error) {
     console.error('加载分类失败:', error)
   } finally {

@@ -161,8 +161,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { productAPI, type Product, type ProductListParams } from '@/api/product'
-import { categoryAPI, type Category } from '@/api/category'
+import { getProducts } from '@/api/product'
+import { getCategories } from '@/api/category'
+import type { Product, ProductListParams, Category } from '@/types'
 import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
@@ -211,7 +212,7 @@ const loadProducts = async () => {
       page: currentPage.value,
       limit: pagination.value.per_page,
       sort_by: sortField as 'created_at' | 'price' | 'sales' | 'rating',
-      sort_order: sortOrder.toUpperCase() as 'ASC' | 'DESC',
+      sort_order: sortOrder.toLowerCase() as 'asc' | 'desc',
     }
 
     if (selectedCategory.value) params.category_id = selectedCategory.value
@@ -223,9 +224,14 @@ const loadProducts = async () => {
       params.max_price = Number(priceRange.value.max)
     }
 
-    const response = await productAPI.getProducts(params)
-    products.value = response.data.products
-    pagination.value = response.data.pagination
+    const response = await getProducts(params)
+    products.value = response.data.data.items
+    pagination.value = {
+      current_page: response.data.data.page,
+      per_page: response.data.data.limit,
+      total: response.data.data.total,
+      total_pages: response.data.data.totalPages,
+    }
   } catch (error) {
     console.error('加载商品失败:', error)
   } finally {
@@ -236,8 +242,8 @@ const loadProducts = async () => {
 // 加载分类数据
 const loadCategories = async () => {
   try {
-    const response = await categoryAPI.getCategories()
-    categories.value = response.data
+    const response = await getCategories()
+    categories.value = response.data.data
   } catch (error) {
     console.error('加载分类失败:', error)
   }

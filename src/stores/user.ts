@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { userAPI, type User, type LoginData, type RegisterData } from '@/api/user'
+import type { User, LoginData, RegisterData } from '@/types'
+import { login, register, getUserInfo, updateUserInfo } from '@/api/user'
 
 interface ErrorResponse {
   response?: {
@@ -31,10 +32,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 登录
-  const login = async (loginData: LoginData) => {
+  const loginUser = async (loginData: LoginData) => {
     try {
-      const response = await userAPI.login(loginData)
-      const { user: userData, token: userToken } = response.data
+      const response = await login(loginData)
+      const { user: userData, token: userToken } = response.data.data
 
       user.value = userData
       token.value = userToken
@@ -42,7 +43,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('token', userToken)
 
-      return { success: true, data: response.data }
+      return { success: true, data: response.data.data }
     } catch (error: unknown) {
       const err = error as ErrorResponse
       return {
@@ -53,10 +54,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 注册
-  const register = async (registerData: RegisterData) => {
+  const registerUser = async (registerData: RegisterData) => {
     try {
-      const response = await userAPI.register(registerData)
-      const { user: userData, token: userToken } = response.data
+      const response = await register(registerData)
+      const { user: userData, token: userToken } = response.data.data
 
       user.value = userData
       token.value = userToken
@@ -64,7 +65,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('token', userToken)
 
-      return { success: true, data: response.data }
+      return { success: true, data: response.data.data }
     } catch (error: unknown) {
       const err = error as ErrorResponse
       return {
@@ -85,9 +86,9 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const fetchProfile = async () => {
     try {
-      const response = await userAPI.getProfile()
-      user.value = response.data.user
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+      const response = await getUserInfo()
+      user.value = response.data.data
+      localStorage.setItem('user', JSON.stringify(response.data.data))
       return { success: true }
     } catch (error: unknown) {
       const err = error as ErrorResponse
@@ -101,7 +102,7 @@ export const useUserStore = defineStore('user', () => {
   // 更新用户信息
   const updateProfile = async (userData: Partial<User>) => {
     try {
-      await userAPI.updateProfile(userData)
+      await updateUserInfo(userData)
       if (user.value) {
         user.value = { ...user.value, ...userData }
         localStorage.setItem('user', JSON.stringify(user.value))
@@ -122,8 +123,8 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn,
     isAdmin,
     initUser,
-    login,
-    register,
+    login: loginUser,
+    register: registerUser,
     logout,
     fetchProfile,
     updateProfile,

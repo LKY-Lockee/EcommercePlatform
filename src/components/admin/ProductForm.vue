@@ -62,8 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { AdminProduct } from '@/api/admin'
-import type { Category } from '@/api/category'
+import type { AdminProduct, Category } from '@/types'
 
 interface Props {
   product?: Partial<AdminProduct>

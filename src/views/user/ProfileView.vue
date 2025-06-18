@@ -83,7 +83,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { userAPI } from '@/api/user'
+import { changePassword } from '@/api/user'
 import { useToast } from 'vuestic-ui'
 
 const userStore = useUserStore()
@@ -204,8 +204,8 @@ const handleChangePassword = async () => {
 
   changingPassword.value = true
   try {
-    await userAPI.changePassword({
-      currentPassword: passwordForm.value.currentPassword,
+    await changePassword({
+      oldPassword: passwordForm.value.currentPassword,
       newPassword: passwordForm.value.newPassword,
     })
 

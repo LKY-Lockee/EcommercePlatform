@@ -150,17 +150,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import {
-  getAddresses,
+  getUserAddresses,
   createAddress,
   updateAddress,
   deleteAddress as deleteAddressAPI,
   setDefaultAddress as setDefaultAddressAPI,
-  getProvinces,
-  getCitiesByProvince,
-  getDistrictsByCity,
-  type Address,
-  type CreateAddressData,
-} from '@/api/address'
+} from '@/api/user'
+import { getProvinces, getCitiesByProvince, getDistrictsByCity } from '@/api/address'
+import type { Address, AddressCreateData } from '@/types'
 
 const showAddDialog = ref(false)
 const isEditing = ref(false)
@@ -208,8 +205,8 @@ const isFormValid = computed(() => {
 const loadAddresses = async () => {
   loading.value = true
   try {
-    const response = await getAddresses()
-    addresses.value = response.data || []
+    const response = await getUserAddresses()
+    addresses.value = response.data.data || []
   } catch {
     addresses.value = []
   } finally {
@@ -297,7 +294,7 @@ const handleSaveAddress = async () => {
 
   saveLoading.value = true
   try {
-    const addressData: CreateAddressData = {
+    const addressData: AddressCreateData = {
       name: addressForm.value.name,
       phone: addressForm.value.phone,
       province: addressForm.value.province,

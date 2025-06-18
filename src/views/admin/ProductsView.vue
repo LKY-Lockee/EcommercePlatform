@@ -44,7 +44,7 @@
         class="data-table"
       >
         <template #cell(image_url)="{ rowData }">
-          <va-avatar :src="rowData.image_url || '/placeholder.png'" size="medium" square />
+          <va-avatar :src="getProductImage(rowData) || '/placeholder.png'" size="medium" square />
         </template>
 
         <template #cell(price)="{ rowData }">
@@ -113,21 +113,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAdminProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  type AdminProduct,
-} from '@/api/admin'
-import { getCategories, type Category } from '@/api/category'
+import { getAdminProducts, createProduct, updateProduct, deleteProduct } from '@/api/admin'
+import { getCategories } from '@/api/category'
+import type { AdminProduct, Category } from '@/types'
 import ProductForm from '@/components/admin/ProductForm.vue'
 
 const loading = ref(false)
 const products = ref<AdminProduct[]>([])
 const categories = ref<Category[]>([])
 const searchQuery = ref('')
-const selectedCategory = ref('')
+const selectedCategory = ref<number | undefined>(undefined)
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const currentProduct = ref<Partial<AdminProduct>>({})
@@ -162,10 +157,10 @@ const loadProducts = async () => {
       page: pagination.value.page,
       limit: pagination.value.perPage,
       search: searchQuery.value,
-      category: selectedCategory.value,
+      category_id: selectedCategory.value,
     })
-    products.value = response.data.products || []
-    pagination.value.total = response.data.total
+    products.value = response.data.data.items || []
+    pagination.value.total = response.data.data.total
   } catch (error) {
     console.error('加载商品失败:', error)
   } finally {
@@ -176,7 +171,7 @@ const loadProducts = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories()
-    categories.value = response.data
+    categories.value = response.data.data
   } catch (error) {
     console.error('加载分类失败:', error)
   }
@@ -254,6 +249,20 @@ const getStatusText = (status: string) => {
     out_of_stock: '缺货',
   }
   return texts[status] || status
+}
+
+// 获取产品图片
+const getProductImage = (product: AdminProduct): string | undefined => {
+  if (!product.images || product.images.length === 0) {
+    return product.primary_image
+  }
+
+  const firstImage = product.images[0]
+  if (typeof firstImage === 'string') {
+    return firstImage
+  } else {
+    return firstImage.image_url
+  }
 }
 
 onMounted(() => {

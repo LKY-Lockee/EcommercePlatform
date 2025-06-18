@@ -124,9 +124,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { categoryAPI, type Category } from '@/api/category'
-import { productAPI, type Product } from '@/api/product'
-import { bannerAPI, type Banner } from '@/api/banner'
+import { getCategories } from '@/api/category'
+import { getFeaturedProducts } from '@/api/product'
+import { getBanners } from '@/api/banner'
+import type { Category, Product, Banner } from '@/types'
 import ProductCard from '@/components/ProductCard.vue'
 
 // 响应式数据
@@ -140,17 +141,18 @@ const defaultBanner: Banner = {
   id: 1,
   title: '夏季大促销',
   subtitle: '精选商品 5折起',
-  image_url: 'https://via.placeholder.com/1200x400/4f46e5/ffffff?text=夏季大促销',
-  link_url: '/products',
-  button_text: '立即抢购',
+  image: 'https://via.placeholder.com/1200x400/4f46e5/ffffff?text=夏季大促销',
+  link: '/products',
   sort_order: 1,
+  is_active: true,
+  created_at: new Date().toISOString(),
 }
 
 // 加载轮播图数据
 const loadBanners = async () => {
   try {
-    const response = await bannerAPI.getBanners()
-    bannerItems.value = response.data
+    const response = await getBanners()
+    bannerItems.value = response.data.data
   } catch (error) {
     console.error('加载轮播图失败:', error)
     bannerItems.value = [defaultBanner]
@@ -160,8 +162,8 @@ const loadBanners = async () => {
 // 加载分类数据
 const loadCategories = async () => {
   try {
-    const response = await categoryAPI.getCategories()
-    categories.value = response.data.slice(0, 8)
+    const response = await getCategories()
+    categories.value = response.data.data.slice(0, 8)
   } catch (error) {
     console.error('加载分类失败:', error)
   }
@@ -170,8 +172,8 @@ const loadCategories = async () => {
 // 加载推荐商品
 const loadFeaturedProducts = async () => {
   try {
-    const response = await productAPI.getFeaturedProducts(8)
-    featuredProducts.value = response.data.products
+    const response = await getFeaturedProducts()
+    featuredProducts.value = response.data.data.slice(0, 8)
   } catch (error) {
     console.error('加载推荐商品失败:', error)
   }

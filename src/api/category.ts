@@ -1,23 +1,18 @@
-import api from './index'
+import request from './index'
+import type { Category, ApiResponse } from '@/types'
 
-export interface Category {
-  id: number
-  name: string
-  description?: string
-  image?: string
-  parent_id?: number
-  sort_order: number
-  is_active: boolean
-  created_at: string
-}
+// ===== 分类查询相关 =====
 
-// 获取所有分类
-export const getCategories = () => api.get<Category[]>('/categories')
+// 获取所有分类（包含层级结构）
+export const getCategories = () => request.get<ApiResponse<Category[]>>('/categories')
 
 // 获取分类详情
-export const getCategory = (id: number) => api.get<Category>(`/categories/${id}`)
+export const getCategoryDetail = (id: number) =>
+  request.get<ApiResponse<Category>>(`/categories/${id}`)
 
-export const categoryAPI = {
-  getCategories,
-  getCategory,
-}
+// 获取顶级分类
+export const getTopCategories = () => request.get<ApiResponse<Category[]>>('/categories/top')
+
+// 获取子分类
+export const getSubCategories = (parentId: number) =>
+  request.get<ApiResponse<Category[]>>(`/categories/${parentId}/children`)

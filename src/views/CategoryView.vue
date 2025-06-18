@@ -164,8 +164,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getProducts, type Product, type ProductListParams } from '@/api/product'
-import { getCategory } from '@/api/category'
+import { getProducts } from '@/api/product'
+import { getCategoryDetail } from '@/api/category'
+import type { Product, ProductListParams } from '@/types'
 import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
@@ -205,8 +206,8 @@ const loadCategory = async () => {
   if (!categoryId) return
 
   try {
-    const response = await getCategory(parseInt(categoryId))
-    categoryName.value = response.data.name
+    const response = await getCategoryDetail(parseInt(categoryId))
+    categoryName.value = response.data.data.name
   } catch (error) {
     console.error('加载分类信息失败:', error)
   }
@@ -234,7 +235,7 @@ const loadProducts = async () => {
     if (sortBy.value !== 'created_at') {
       const [field, order] = sortBy.value.split('_')
       params.sort_by = field as 'created_at' | 'price' | 'sales' | 'rating'
-      params.sort_order = order?.toUpperCase() as 'ASC' | 'DESC'
+      params.sort_order = order?.toLowerCase() as 'asc' | 'desc'
     }
 
     if (priceRange.value.min || priceRange.value.max) {
@@ -247,16 +248,14 @@ const loadProducts = async () => {
     }
 
     const response = await getProducts(params)
-    products.value = response.data.products || response.data
+    products.value = response.data.data.items
 
     // 设置分页信息
-    if (response.data.pagination?.total) {
-      totalProducts.value = response.data.pagination.total
-      totalPages.value = Math.ceil(response.data.pagination.total / pageSize.value)
+    if (response.data.data.total) {
+      totalProducts.value = response.data.data.total
+      totalPages.value = response.data.data.totalPages
     } else {
-      totalProducts.value = Array.isArray(response.data)
-        ? response.data.length
-        : response.data.products?.length || 0
+      totalProducts.value = response.data.data.items?.length || 0
       totalPages.value = 1
     }
   } catch (error) {

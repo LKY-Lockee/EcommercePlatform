@@ -48,7 +48,7 @@
           </div>
           <div class="stat-details">
             <div class="stat-number">{{ stats.completed }}</div>
-            <div class="stat-label">已完成</div>
+            <div class="stat-label">已送达</div>
           </div>
         </div>
       </div>
@@ -81,15 +81,15 @@
     <!-- 订单列表 -->
     <div class="orders-table">
       <va-data-table :items="orders" :columns="columns" :loading="loading" class="data-table">
-        <template #cell(orderNumber)="{ rowData }">
-          <span class="order-number">{{ rowData.orderNumber }}</span>
+        <template #cell(order_number)="{ rowData }">
+          <span class="order-number">{{ rowData.order_number }}</span>
         </template>
 
         <template #cell(user)="{ rowData }">
           <div class="user-info">
             <va-avatar size="small" :src="rowData.user?.avatar" />
             <div class="user-details">
-              <div class="user-name">{{ rowData.user?.name }}</div>
+              <div class="user-name">{{ rowData.user?.username }}</div>
               <div class="user-email">{{ rowData.user?.email }}</div>
             </div>
           </div>
@@ -101,8 +101,8 @@
           </span>
         </template>
 
-        <template #cell(total)="{ rowData }">
-          <span class="order-total">¥{{ rowData.total.toFixed(2) }}</span>
+        <template #cell(total_amount)="{ rowData }">
+          <span class="order-total">¥{{ rowData.total_amount.toFixed(2) }}</span>
         </template>
 
         <template #cell(actions)="{ rowData }">
@@ -118,25 +118,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-
-interface User {
-  id: number
-  name: string
-  email: string
-  avatar?: string
-}
-
-interface Order {
-  id: number
-  orderNumber: string
-  user: User
-  status: 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled'
-  total: number
-  createdAt: string
-}
+import { getAdminOrders } from '@/api/admin'
+import type { AdminOrder, OrderStatus } from '@/types'
 
 const searchQuery = ref('')
-const statusFilter = ref('')
+const statusFilter = ref<OrderStatus | ''>('')
 const loading = ref(false)
 
 const stats = ref({
@@ -146,22 +132,22 @@ const stats = ref({
   cancelled: 0,
 })
 
-const orders = ref<Order[]>([])
+const orders = ref<AdminOrder[]>([])
 
 const statusOptions = [
   { text: '待支付', value: 'pending' },
   { text: '已支付', value: 'paid' },
   { text: '已发货', value: 'shipped' },
-  { text: '已完成', value: 'completed' },
+  { text: '已送达', value: 'delivered' },
   { text: '已取消', value: 'cancelled' },
 ]
 
 const columns = [
-  { key: 'orderNumber', label: '订单号' },
+  { key: 'order_number', label: '订单号' },
   { key: 'user', label: '用户' },
   { key: 'status', label: '状态' },
-  { key: 'total', label: '金额' },
-  { key: 'createdAt', label: '创建时间' },
+  { key: 'total_amount', label: '金额' },
+  { key: 'created_at', label: '创建时间' },
   { key: 'actions', label: '操作' },
 ]
 
@@ -178,7 +164,19 @@ const resetSearch = () => {
 const loadOrders = async () => {
   loading.value = true
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const response = await getAdminOrders({
+      search: searchQuery.value,
+      status: statusFilter.value || undefined,
+    })
+    orders.value = response.data.data.items
+
+    // 计算统计信息
+    stats.value = {
+      total: response.data.data.total,
+      completed: orders.value.filter((o) => o.status === 'delivered').length,
+      pending: orders.value.filter((o) => o.status === 'pending').length,
+      cancelled: orders.value.filter((o) => o.status === 'cancelled').length,
+    }
   } catch (error) {
     console.error('加载订单失败:', error)
   } finally {
@@ -186,20 +184,22 @@ const loadOrders = async () => {
   }
 }
 
-const viewOrder = (order: Order) => {
+const viewOrder = (order: AdminOrder) => {
   console.log('查看订单:', order)
+  // TODO: 实现订单详情查看
 }
 
-const editOrder = (order: Order) => {
+const editOrder = async (order: AdminOrder) => {
   console.log('编辑订单:', order)
+  // TODO: 实现订单状态更新
 }
 
-const getStatusText = (status: string) => {
-  const texts: Record<string, string> = {
+const getStatusText = (status: OrderStatus) => {
+  const texts: Record<OrderStatus, string> = {
     pending: '待支付',
     paid: '已支付',
     shipped: '已发货',
-    completed: '已完成',
+    delivered: '已送达',
     cancelled: '已取消',
   }
   return texts[status] || status

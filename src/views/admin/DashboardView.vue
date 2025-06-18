@@ -68,12 +68,12 @@
             </span>
           </template>
 
-          <template #cell(total)="{ rowData }">
-            ¥{{ formatMoney(rowData.total) }}
+          <template #cell(total_amount)="{ rowData }">
+            ¥{{ formatMoney(rowData.total_amount) }}
           </template>
 
-          <template #cell(createdAt)="{ rowData }">
-            {{ formatDate(rowData.createdAt) }}
+          <template #cell(created_at)="{ rowData }">
+            {{ formatDate(rowData.created_at) }}
           </template>
         </va-data-table>
       </div>
@@ -83,7 +83,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getDashboardStats, type AdminStats } from '@/api/admin'
+import { getDashboardStats } from '@/api/admin'
+import type { AdminStats } from '@/types'
 
 const loading = ref(false)
 const stats = ref<AdminStats>({
@@ -95,18 +96,18 @@ const stats = ref<AdminStats>({
 })
 
 const orderColumns = [
-  { key: 'orderNumber', label: '订单号' },
+  { key: 'order_number', label: '订单号' },
   { key: 'username', label: '客户' },
   { key: 'status', label: '状态' },
-  { key: 'totalAmount', label: '金额' },
-  { key: 'createdAt', label: '创建时间' },
+  { key: 'total_amount', label: '金额' },
+  { key: 'created_at', label: '创建时间' },
 ]
 
 const loadStats = async () => {
   try {
     loading.value = true
     const response = await getDashboardStats()
-    stats.value = response.data
+    stats.value = response.data.data
   } catch (error) {
     console.error('加载统计数据失败:', error)
   } finally {

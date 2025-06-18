@@ -60,7 +60,7 @@
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
-import type { Product } from '@/api/product'
+import type { Product } from '@/types'
 
 interface Props {
   product: Product
