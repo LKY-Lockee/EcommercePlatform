@@ -1,70 +1,67 @@
+好的。接下来对注册和登录界面重新设计，并且移除登陆界面的第三方登录
 <template>
   <div class="admin-users">
     <div class="page-header">
       <h1 class="page-title">用户管理</h1>
     </div>
 
-    <!-- 搜索 -->
-    <va-card class="filter-card">
-      <va-card-content>
-        <va-row :gutter="16">
-          <va-column :xs="12" :md="6">
-            <va-input
-              v-model="searchQuery"
-              label="搜索用户"
-              placeholder="输入用户名或邮箱"
-              clearable
-              @input="handleSearch"
-            >
-              <template #prepend>
-                <va-icon name="search" />
-              </template>
-            </va-input>
-          </va-column>
-        </va-row>
-      </va-card-content>
-    </va-card>
+    <!-- 搜索筛选区 -->
+    <div class="search-section">
+      <div class="search-content">
+        <div class="search-input">
+          <va-input
+            v-model="searchQuery"
+            placeholder="搜索用户名或邮箱"
+            clearable
+            @input="handleSearch"
+          >
+            <template #prepend>
+              <va-icon name="search" />
+            </template>
+          </va-input>
+        </div>
+      </div>
+    </div>
 
-    <!-- 用户列表 -->
-    <va-card>
-      <va-card-content>
-        <va-data-table
-          :items="users"
-          :columns="columns"
-          :loading="loading"
-          :pagination="pagination"
-          @update:pagination="updatePagination"
-          no-data-html="暂无用户"
-        >
-          <template #cell(avatar)="{ rowData }">
-            <va-avatar :src="(rowData as any).avatar || '/default-avatar.png'" size="small" />
-          </template>
+    <!-- 用户表格 -->
+    <div class="users-table">
+      <va-data-table
+        :items="users"
+        :columns="columns"
+        :loading="loading"
+        :pagination="pagination"
+        @update:pagination="updatePagination"
+        class="data-table"
+        no-data-html="暂无用户"
+      >
+        <template #cell(avatar)="{ rowData }">
+          <va-avatar :src="rowData.avatar || '/default-avatar.png'" size="small" />
+        </template>
 
-          <template #cell(role)="{ rowData }">
-            <va-chip :color="rowData.role === 'admin' ? 'primary' : 'secondary'" small>
-              {{ rowData.role === 'admin' ? '管理员' : '用户' }}
-            </va-chip>
-          </template>
+        <template #cell(role)="{ rowData }">
+          <span :class="`role-badge ${rowData.role}`">
+            {{ rowData.role === 'admin' ? '管理员' : '用户' }}
+          </span>
+        </template>
 
-          <template #cell(created_at)="{ rowData }">
-            {{ formatDate(rowData.created_at) }}
-          </template>
+        <template #cell(created_at)="{ rowData }">
+          <span class="date-text">{{ formatDate(rowData.created_at) }}</span>
+        </template>
 
-          <template #cell(actions)="{ rowData }">
-            <div class="action-buttons">
-              <va-button
-                v-if="rowData.role !== 'admin'"
-                preset="secondary"
-                size="small"
-                icon="delete"
-                color="danger"
-                @click="deleteUserConfirm(rowData)"
-              />
-            </div>
-          </template>
-        </va-data-table>
-      </va-card-content>
-    </va-card>
+        <template #cell(actions)="{ rowData }">
+          <div class="action-buttons">
+            <va-button
+              v-if="rowData.role !== 'admin'"
+              preset="plain"
+              size="small"
+              icon="delete"
+              color="danger"
+              @click="deleteUserConfirm(rowData)"
+            />
+          </div>
+        </template>
+      </va-data-table>
+    </div>
   </div>
 </template>
 
@@ -146,27 +143,94 @@ onMounted(() => {
 
 <style scoped>
 .admin-users {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
 }
 
 .page-title {
   margin: 0;
-  color: var(--va-primary);
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
-.filter-card {
+/* 搜索筛选区 */
+.search-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   margin-bottom: 24px;
+  padding: 20px;
 }
 
+.search-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.search-input {
+  max-width: 400px;
+}
+
+@media (min-width: 768px) {
+  .search-content {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+/* 用户表格 */
+.users-table {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.data-table {
+  --va-data-table-thead-background: #f8fafc;
+  --va-data-table-thead-color: #475569;
+  --va-data-table-border-color: #e2e8f0;
+}
+
+/* 角色标签 */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.admin {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.role-badge.user {
+  background-color: #e0f2fe;
+  color: #0277bd;
+}
+
+/* 日期文本 */
+.date-text {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* 操作按钮 */
 .action-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 </style>

@@ -20,6 +20,7 @@ export interface AdminUser {
   email: string
   phone: string
   role: string
+  avatar?: string
   created_at: string
 }
 

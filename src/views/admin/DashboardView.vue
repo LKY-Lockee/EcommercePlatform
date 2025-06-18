@@ -1,98 +1,83 @@
 <template>
   <div class="dashboard">
-    <h1 class="page-title">管理仪表板</h1>
-
     <!-- 统计卡片 -->
-    <va-row :gutter="20" class="stats-row">
-      <va-column :xs="12" :md="6" :lg="3">
-        <va-card class="stat-card">
-          <va-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <va-icon name="people" size="large" color="primary" />
-              </div>
-              <div class="stat-details">
-                <div class="stat-number">{{ stats.users }}</div>
-                <div class="stat-label">用户总数</div>
-              </div>
-            </div>
-          </va-card-content>
-        </va-card>
-      </va-column>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon users">
+            <va-icon name="people" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.users }}</div>
+            <div class="stat-label">用户总数</div>
+          </div>
+        </div>
+      </div>
 
-      <va-column :xs="12" :md="6" :lg="3">
-        <va-card class="stat-card">
-          <va-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <va-icon name="inventory" size="large" color="success" />
-              </div>
-              <div class="stat-details">
-                <div class="stat-number">{{ stats.products }}</div>
-                <div class="stat-label">商品总数</div>
-              </div>
-            </div>
-          </va-card-content>
-        </va-card>
-      </va-column>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon products">
+            <va-icon name="inventory" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.products }}</div>
+            <div class="stat-label">商品总数</div>
+          </div>
+        </div>
+      </div>
 
-      <va-column :xs="12" :md="6" :lg="3">
-        <va-card class="stat-card">
-          <va-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <va-icon name="receipt" size="large" color="warning" />
-              </div>
-              <div class="stat-details">
-                <div class="stat-number">{{ stats.orders }}</div>
-                <div class="stat-label">订单总数</div>
-              </div>
-            </div>
-          </va-card-content>
-        </va-card>
-      </va-column>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon orders">
+            <va-icon name="receipt" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.orders }}</div>
+            <div class="stat-label">订单总数</div>
+          </div>
+        </div>
+      </div>
 
-      <va-column :xs="12" :md="6" :lg="3">
-        <va-card class="stat-card">
-          <va-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <va-icon name="monetization_on" size="large" color="danger" />
-              </div>
-              <div class="stat-details">
-                <div class="stat-number">¥{{ formatMoney(stats.revenue) }}</div>
-                <div class="stat-label">总收入</div>
-              </div>
-            </div>
-          </va-card-content>
-        </va-card>
-      </va-column>
-    </va-row>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon revenue">
+            <va-icon name="monetization_on" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">¥{{ formatMoney(stats.revenue) }}</div>
+            <div class="stat-label">总收入</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 最近订单 -->
-    <va-card class="recent-orders-card">
-      <va-card-title>最近订单</va-card-title>
-      <va-card-content>
+    <div class="recent-orders">
+      <h3 class="section-title">最近订单</h3>
+      <div class="orders-table-container">
         <va-data-table
           :items="stats.recentOrders"
           :columns="orderColumns"
           :loading="loading"
           no-data-html="暂无订单"
+          class="orders-table"
         >
           <template #cell(status)="{ rowData }">
-            <va-chip :color="getStatusColor(rowData.status)" small>
+            <span :class="`status-badge ${rowData.status}`">
               {{ getStatusText(rowData.status) }}
-            </va-chip>
+            </span>
           </template>
 
-          <template #cell(total_amount)="{ rowData }"> ¥{{ formatMoney(rowData.total) }} </template>
+          <template #cell(total)="{ rowData }">
+            ¥{{ formatMoney(rowData.total) }}
+          </template>
 
-          <template #cell(created_at)="{ rowData }">
+          <template #cell(createdAt)="{ rowData }">
             {{ formatDate(rowData.createdAt) }}
           </template>
         </va-data-table>
-      </va-card-content>
-    </va-card>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,11 +95,11 @@ const stats = ref<AdminStats>({
 })
 
 const orderColumns = [
-  { key: 'order_number', label: '订单号' },
+  { key: 'orderNumber', label: '订单号' },
   { key: 'username', label: '客户' },
   { key: 'status', label: '状态' },
-  { key: 'total_amount', label: '金额' },
-  { key: 'created_at', label: '创建时间' },
+  { key: 'totalAmount', label: '金额' },
+  { key: 'createdAt', label: '创建时间' },
 ]
 
 const loadStats = async () => {
@@ -129,27 +114,38 @@ const loadStats = async () => {
   }
 }
 
-const formatMoney = (amount: number) => {
+const formatMoney = (amount: number | null | undefined) => {
+  // 处理空值和非数字值
+  if (amount == null || isNaN(amount)) {
+    return '0.00'
+  }
+
   return new Intl.NumberFormat('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
 }
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN')
-}
-
-const getStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    pending: 'warning',
-    paid: 'success',
-    shipped: 'info',
-    delivered: 'success',
-    cancelled: 'danger',
+const formatDate = (dateStr: string | null | undefined) => {
+  // 处理空值和无效日期字符串
+  if (!dateStr) {
+    return '无'
   }
-  return colors[status] || 'primary'
+
+  const date = new Date(dateStr)
+
+  // 检查日期是否有效
+  if (isNaN(date.getTime())) {
+    return '无效日期'
+  }
+
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 const getStatusText = (status: string) => {
@@ -170,30 +166,56 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.page-title {
-  margin-bottom: 24px;
-  color: var(--va-primary);
-}
-
-.stats-row {
-  margin-bottom: 24px;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .stat-card {
-  height: 120px;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
 }
 
 .stat-content {
   display: flex;
   align-items: center;
-  height: 100%;
+  gap: 1rem;
 }
 
 .stat-icon {
-  margin-right: 16px;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.stat-icon.users {
+  background: var(--va-primary);
+}
+
+.stat-icon.products {
+  background: #10b981;
+}
+
+.stat-icon.orders {
+  background: #f59e0b;
+}
+
+.stat-icon.revenue {
+  background: #ef4444;
 }
 
 .stat-details {
@@ -201,18 +223,101 @@ onMounted(() => {
 }
 
 .stat-number {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 1.875rem;
+  font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
+  color: var(--va-text-primary);
 }
 
 .stat-label {
-  font-size: 14px;
-  color: var(--va-secondary);
+  font-size: 0.875rem;
+  color: var(--va-text-secondary);
+  font-weight: 500;
 }
 
-.recent-orders-card {
-  margin-top: 24px;
+.recent-orders {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.section-title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+}
+
+.orders-table-container {
+  overflow-x: auto;
+}
+
+.orders-table {
+  min-width: 600px;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.shipped {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-content {
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .recent-orders {
+    padding: 1rem;
+  }
 }
 </style>

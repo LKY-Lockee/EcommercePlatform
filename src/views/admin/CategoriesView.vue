@@ -1,49 +1,43 @@
 <template>
   <div class="admin-categories">
     <div class="page-header">
-      <h1 class="page-title">分类管理</h1>
+      <h2 class="page-title">分类管理</h2>
       <va-button @click="showCreateDialog = true" icon="add"> 添加分类 </va-button>
     </div>
 
     <!-- 分类列表 -->
-    <va-card>
-      <va-card-content>
-        <va-data-table
-          :items="categories"
-          :columns="columns"
-          :loading="loading"
-          no-data-html="暂无分类"
-        >
-          <template #cell(image)="{ rowData }">
-            <va-avatar :src="rowData.image || '/placeholder.png'" size="small" square />
-          </template>
+    <div class="categories-table">
+      <va-data-table
+        :items="categories"
+        :columns="columns"
+        :loading="loading"
+        no-data-html="暂无分类"
+        class="data-table"
+      >
+        <template #cell(image)="{ rowData }">
+          <va-avatar :src="rowData.image || '/placeholder.png'" size="small" square />
+        </template>
 
-          <template #cell(is_active)="{ rowData }">
-            <va-chip :color="rowData.is_active ? 'success' : 'secondary'" small>
-              {{ rowData.is_active ? '启用' : '禁用' }}
-            </va-chip>
-          </template>
+        <template #cell(is_active)="{ rowData }">
+          <span :class="`status-badge ${rowData.is_active ? 'active' : 'inactive'}`">
+            {{ rowData.is_active ? '启用' : '禁用' }}
+          </span>
+        </template>
 
-          <template #cell(actions)="{ rowData }">
-            <div class="action-buttons">
-              <va-button
-                preset="secondary"
-                size="small"
-                icon="edit"
-                @click="editCategory(rowData)"
-              />
-              <va-button
-                preset="secondary"
-                size="small"
-                icon="delete"
-                color="danger"
-                @click="deleteCategoryConfirm(rowData)"
-              />
-            </div>
-          </template>
-        </va-data-table>
-      </va-card-content>
-    </va-card>
+        <template #cell(actions)="{ rowData }">
+          <div class="action-buttons">
+            <va-button preset="plain" size="small" icon="edit" @click="editCategory(rowData)" />
+            <va-button
+              preset="plain"
+              size="small"
+              icon="delete"
+              color="danger"
+              @click="deleteCategoryConfirm(rowData)"
+            />
+          </div>
+        </template>
+      </va-data-table>
+    </div>
 
     <!-- 创建/编辑分类对话框 -->
     <va-modal v-model="showCreateDialog" title="添加分类" @ok="handleCreateCategory">
@@ -152,23 +146,69 @@ onMounted(() => {
 
 <style scoped>
 .admin-categories {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
 .page-title {
   margin: 0;
-  color: var(--va-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+}
+
+.categories-table {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 600px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .categories-table {
+    padding: 1rem;
+  }
 }
 </style>

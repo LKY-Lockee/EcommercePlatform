@@ -1,103 +1,94 @@
 <template>
   <div class="admin-products">
     <div class="page-header">
-      <h1 class="page-title">商品管理</h1>
+      <h2 class="page-title">商品管理</h2>
       <va-button @click="showCreateDialog = true" icon="add"> 添加商品 </va-button>
     </div>
 
     <!-- 搜索和筛选 -->
-    <va-card class="filter-card">
-      <va-card-content>
-        <va-row :gutter="16">
-          <va-column :xs="12" :md="6" :lg="4">
-            <va-input
-              v-model="searchQuery"
-              label="搜索商品"
-              placeholder="输入商品名称"
-              clearable
-              @input="handleSearch"
-            >
-              <template #prepend>
-                <va-icon name="search" />
-              </template>
-            </va-input>
-          </va-column>
-          <va-column :xs="12" :md="6" :lg="4">
-            <va-select
-              v-model="selectedCategory"
-              label="商品分类"
-              :options="categoryOptions"
-              clearable
-              @update:modelValue="loadProducts"
-            />
-          </va-column>
-        </va-row>
-      </va-card-content>
-    </va-card>
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-item">
+          <va-input
+            v-model="searchQuery"
+            placeholder="搜索商品名称"
+            clearable
+            @input="handleSearch"
+          >
+            <template #prepend>
+              <va-icon name="search" />
+            </template>
+          </va-input>
+        </div>
+        <div class="filter-item">
+          <va-select
+            v-model="selectedCategory"
+            placeholder="选择分类"
+            :options="categoryOptions"
+            clearable
+            @update:modelValue="loadProducts"
+          />
+        </div>
+      </div>
+    </div>
 
     <!-- 商品列表 -->
-    <va-card>
-      <va-card-content>
-        <va-data-table
-          :items="products"
-          :columns="columns"
-          :loading="loading"
-          :pagination="pagination"
-          @update:pagination="updatePagination"
-          no-data-html="暂无商品"
-        >
-          <template #cell(image_url)="{ rowData }">
-            <va-avatar :src="rowData.image_url || '/placeholder.png'" size="medium" square />
-          </template>
+    <div class="products-table">
+      <va-data-table
+        :items="products"
+        :columns="columns"
+        :loading="loading"
+        :pagination="pagination"
+        @update:pagination="updatePagination"
+        no-data-html="暂无商品"
+        class="data-table"
+      >
+        <template #cell(image_url)="{ rowData }">
+          <va-avatar :src="rowData.image_url || '/placeholder.png'" size="medium" square />
+        </template>
 
-          <template #cell(price)="{ rowData }">
-            <div>
-              <div class="price-current">¥{{ formatMoney(rowData.price) }}</div>
-              <div
-                v-if="rowData.original_price && rowData.original_price > rowData.price"
-                class="price-original"
-              >
-                ¥{{ formatMoney(rowData.original_price) }}
-              </div>
+        <template #cell(price)="{ rowData }">
+          <div class="price-info">
+            <div class="price-current">¥{{ formatMoney(rowData.price) }}</div>
+            <div
+              v-if="rowData.original_price && rowData.original_price > rowData.price"
+              class="price-original"
+            >
+              ¥{{ formatMoney(rowData.original_price) }}
             </div>
-          </template>
+          </div>
+        </template>
 
-          <template #cell(status)="{ rowData }">
-            <va-chip :color="getStatusColor(rowData.status)" small>
-              {{ getStatusText(rowData.status) }}
-            </va-chip>
-          </template>
+        <template #cell(status)="{ rowData }">
+          <span :class="`status-badge ${rowData.status}`">
+            {{ getStatusText(rowData.status) }}
+          </span>
+        </template>
 
-          <template #cell(featured)="{ rowData }">
-            <va-chip v-if="rowData.featured" color="warning" small> 推荐 </va-chip>
-          </template>
+        <template #cell(featured)="{ rowData }">
+          <span v-if="rowData.featured" class="featured-badge">推荐</span>
+        </template>
 
-          <template #cell(stock)="{ rowData }">
-            <span :class="{ 'low-stock': rowData.stock < 10 }">
-              {{ rowData.stock }}
-            </span>
-          </template>
+        <template #cell(stock)="{ rowData }">
+          <span :class="{ 'low-stock': rowData.stock < 10 }">
+            {{ rowData.stock }}
+          </span>
+        </template>
 
-          <template #cell(actions)="{ rowData }">
-            <div class="action-buttons">
-              <va-button
-                preset="secondary"
-                size="small"
-                icon="edit"
-                @click="editProduct(rowData)"
-              />
-              <va-button
-                preset="secondary"
-                size="small"
-                icon="delete"
-                color="danger"
-                @click="deleteProductConfirm(rowData)"
-              />
-            </div>
-          </template>
-        </va-data-table>
-      </va-card-content>
-    </va-card>
+        <template #cell(actions)="{ rowData }">
+          <div class="action-buttons">
+            <va-button preset="plain" size="small" icon="edit" @click="editProduct(rowData)" />
+            <va-button
+              preset="plain"
+              size="small"
+              icon="delete"
+              color="danger"
+              @click="deleteProductConfirm(rowData)"
+            />
+          </div>
+        </template>
+      </va-data-table>
+    </div>
 
     <!-- 创建/编辑商品对话框 -->
     <va-modal v-model="showCreateDialog" title="添加商品" @ok="handleCreateProduct">
@@ -256,15 +247,6 @@ const formatMoney = (amount: number) => {
   }).format(amount)
 }
 
-const getStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    active: 'success',
-    inactive: 'secondary',
-    out_of_stock: 'danger',
-  }
-  return colors[status] || 'primary'
-}
-
 const getStatusText = (status: string) => {
   const texts: Record<string, string> = {
     active: '启用',
@@ -282,43 +264,134 @@ onMounted(() => {
 
 <style scoped>
 .admin-products {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
 .page-title {
   margin: 0;
-  color: var(--va-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
 }
 
-.filter-card {
-  margin-bottom: 24px;
+.filter-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-item {
+  min-width: 0;
+}
+
+.products-table {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 800px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .price-current {
   font-weight: 600;
-  color: var(--va-primary);
+  color: var(--va-text-primary);
 }
 
 .price-original {
-  font-size: 12px;
-  color: var(--va-secondary);
+  font-size: 0.75rem;
+  color: var(--va-text-secondary);
   text-decoration: line-through;
 }
 
 .low-stock {
-  color: var(--va-danger);
+  color: #ef4444;
   font-weight: 600;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-badge.out_of_stock {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.featured-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  background: #fef3c7;
+  color: #d97706;
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .filter-section {
+    padding: 1rem;
+  }
+
+  .products-table {
+    padding: 1rem;
+  }
 }
 </style>

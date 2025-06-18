@@ -1,333 +1,144 @@
 <template>
-  <div class="orders-management">
-    <VaCard>
-      <VaCardHeader>
-        <h1 class="va-h3">订单管理</h1>
-      </VaCardHeader>
-      <VaCardContent>
-        <!-- 搜索过滤器 -->
-        <div class="row align-items-end mb-4">
-          <div class="flex md6 lg3">
-            <VaInput v-model="searchQuery" placeholder="搜索订单号、用户..." clearable />
-          </div>
-          <div class="flex md6 lg3">
-            <VaSelect
-              v-model="statusFilter"
-              :options="statusOptions"
-              text-by="text"
-              value-by="value"
-              placeholder="订单状态"
-              clearable
-            />
-          </div>
-          <div class="flex md6 lg3">
-            <VaDateInput v-model="dateRange" mode="range" placeholder="选择日期范围" clearable />
-          </div>
-          <div class="flex md6 lg3">
-            <VaButton @click="searchOrders" color="primary"> 搜索 </VaButton>
-            <VaButton @click="resetSearch" preset="secondary" class="ml-2"> 重置 </VaButton>
-          </div>
+  <div class="admin-orders">
+    <div class="page-header">
+      <h2 class="page-title">订单管理</h2>
+    </div>
+
+    <!-- 搜索过滤器 -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-item">
+          <va-input v-model="searchQuery" placeholder="搜索订单号、用户..." clearable />
         </div>
-
-        <!-- 订单统计 -->
-        <div class="row mb-4">
-          <div class="flex md3">
-            <VaCard color="primary" text-color="white">
-              <VaCardContent>
-                <div class="va-h4">{{ stats.total }}</div>
-                <div>总订单数</div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-          <div class="flex md3">
-            <VaCard color="success" text-color="white">
-              <VaCardContent>
-                <div class="va-h4">{{ stats.completed }}</div>
-                <div>已完成</div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-          <div class="flex md3">
-            <VaCard color="warning" text-color="white">
-              <VaCardContent>
-                <div class="va-h4">{{ stats.pending }}</div>
-                <div>待处理</div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-          <div class="flex md3">
-            <VaCard color="danger" text-color="white">
-              <VaCardContent>
-                <div class="va-h4">{{ stats.cancelled }}</div>
-                <div>已取消</div>
-              </VaCardContent>
-            </VaCard>
-          </div>
-        </div>
-
-        <!-- 订单列表 -->
-        <VaDataTable :items="orders" :columns="columns" :loading="loading" striped hoverable>
-          <template #cell(orderNumber)="{ rowData }">
-            <VaChip color="primary" size="small">
-              {{ rowData.orderNumber }}
-            </VaChip>
-          </template>
-
-          <template #cell(user)="{ rowData }">
-            <div class="flex items-center gap-2">
-              <VaAvatar size="small" :src="rowData.user?.avatar" />
-              <div>
-                <div class="va-text-bold">{{ rowData.user?.name }}</div>
-                <div class="va-text-secondary">{{ rowData.user?.email }}</div>
-              </div>
-            </div>
-          </template>
-
-          <template #cell(status)="{ rowData }">
-            <VaChip :color="getStatusColor(rowData.status)" size="small">
-              {{ getStatusText(rowData.status) }}
-            </VaChip>
-          </template>
-
-          <template #cell(total)="{ rowData }">
-            <span class="va-text-bold">¥{{ rowData.total.toFixed(2) }}</span>
-          </template>
-
-          <template #cell(createdAt)="{ rowData }">
-            {{ formatDate(rowData.createdAt) }}
-          </template>
-
-          <template #cell(actions)="{ rowData }">
-            <VaButton
-              preset="secondary"
-              size="small"
-              icon="visibility"
-              @click="viewOrder(rowData)"
-              class="mr-2"
-            />
-            <VaDropdown placement="bottom-end">
-              <template #anchor>
-                <VaButton preset="secondary" size="small" icon="more_vert" />
-              </template>
-              <VaDropdownContent>
-                <VaList>
-                  <VaListItem @click="updateOrderStatus(rowData, 'processing')">
-                    <VaListItemSection>
-                      <VaListItemLabel>处理中</VaListItemLabel>
-                    </VaListItemSection>
-                  </VaListItem>
-                  <VaListItem @click="updateOrderStatus(rowData, 'shipped')">
-                    <VaListItemSection>
-                      <VaListItemLabel>已发货</VaListItemLabel>
-                    </VaListItemSection>
-                  </VaListItem>
-                  <VaListItem @click="updateOrderStatus(rowData, 'delivered')">
-                    <VaListItemSection>
-                      <VaListItemLabel>已送达</VaListItemLabel>
-                    </VaListItemSection>
-                  </VaListItem>
-                  <VaListItem @click="updateOrderStatus(rowData, 'cancelled')">
-                    <VaListItemSection>
-                      <VaListItemLabel>取消订单</VaListItemLabel>
-                    </VaListItemSection>
-                  </VaListItem>
-                </VaList>
-              </VaDropdownContent>
-            </VaDropdown>
-          </template>
-        </VaDataTable>
-
-        <!-- 分页 -->
-        <div class="row justify-center mt-4">
-          <VaPagination
-            v-model="currentPage"
-            :pages="totalPages"
-            :visible-pages="5"
-            @change="loadOrders"
+        <div class="filter-item">
+          <va-select
+            v-model="statusFilter"
+            :options="statusOptions"
+            text-by="text"
+            value-by="value"
+            placeholder="订单状态"
+            clearable
           />
         </div>
-      </VaCardContent>
-    </VaCard>
+        <div class="filter-actions">
+          <va-button @click="searchOrders">搜索</va-button>
+          <va-button preset="secondary" @click="resetSearch">重置</va-button>
+        </div>
+      </div>
+    </div>
 
-    <!-- 订单详情弹窗 -->
-    <VaModal v-model="showOrderDetail" size="large" title="订单详情">
-      <div v-if="selectedOrder" class="order-detail">
-        <div class="row mb-4">
-          <div class="flex md6">
-            <VaCard>
-              <VaCardHeader>
-                <h3>订单信息</h3>
-              </VaCardHeader>
-              <VaCardContent>
-                <div class="detail-item">
-                  <strong>订单号：</strong>{{ selectedOrder.orderNumber }}
-                </div>
-                <div class="detail-item">
-                  <strong>订单状态：</strong>
-                  <VaChip :color="getStatusColor(selectedOrder.status)" size="small">
-                    {{ getStatusText(selectedOrder.status) }}
-                  </VaChip>
-                </div>
-                <div class="detail-item">
-                  <strong>下单时间：</strong>{{ formatDate(selectedOrder.createdAt) }}
-                </div>
-                <div class="detail-item">
-                  <strong>订单总额：</strong>¥{{ selectedOrder.total.toFixed(2) }}
-                </div>
-              </VaCardContent>
-            </VaCard>
+    <!-- 订单统计 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon total">
+            <va-icon name="receipt" />
           </div>
-          <div class="flex md6">
-            <VaCard>
-              <VaCardHeader>
-                <h3>用户信息</h3>
-              </VaCardHeader>
-              <VaCardContent>
-                <div class="detail-item">
-                  <strong>用户名：</strong>{{ selectedOrder.user?.name }}
-                </div>
-                <div class="detail-item">
-                  <strong>邮箱：</strong>{{ selectedOrder.user?.email }}
-                </div>
-                <div class="detail-item">
-                  <strong>电话：</strong>{{ selectedOrder.user?.phone }}
-                </div>
-              </VaCardContent>
-            </VaCard>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">总订单数</div>
           </div>
         </div>
-
-        <VaCard>
-          <VaCardHeader>
-            <h3>收货地址</h3>
-          </VaCardHeader>
-          <VaCardContent>
-            <div v-if="selectedOrder.shippingAddress">
-              <div class="detail-item">
-                <strong>收货人：</strong>{{ selectedOrder.shippingAddress.name }}
-              </div>
-              <div class="detail-item">
-                <strong>电话：</strong>{{ selectedOrder.shippingAddress.phone }}
-              </div>
-              <div class="detail-item">
-                <strong>地址：</strong>{{ selectedOrder.shippingAddress.address }}
-              </div>
-            </div>
-          </VaCardContent>
-        </VaCard>
-
-        <VaCard class="mt-4">
-          <VaCardHeader>
-            <h3>订单商品</h3>
-          </VaCardHeader>
-          <VaCardContent>
-            <VaDataTable
-              :items="selectedOrder.items || []"
-              :columns="orderItemColumns"
-              hide-default-header
-            >
-              <template #cell(product)="{ rowData }">
-                <div class="flex items-center gap-3">
-                  <img
-                    :src="rowData.product?.image || '/placeholder.jpg'"
-                    :alt="rowData.product?.name"
-                    class="product-image"
-                  />
-                  <div>
-                    <div class="va-text-bold">{{ rowData.product?.name }}</div>
-                    <div class="va-text-secondary">{{ rowData.product?.description }}</div>
-                  </div>
-                </div>
-              </template>
-
-              <template #cell(price)="{ rowData }"> ¥{{ rowData.price?.toFixed(2) }} </template>
-
-              <template #cell(total)="{ rowData }">
-                <span class="va-text-bold"
-                  >¥{{ (rowData.price * rowData.quantity).toFixed(2) }}</span
-                >
-              </template>
-            </VaDataTable>
-          </VaCardContent>
-        </VaCard>
       </div>
 
-      <template #footer>
-        <VaButton @click="showOrderDetail = false"> 关闭 </VaButton>
-      </template>
-    </VaModal>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon completed">
+            <va-icon name="check_circle" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.completed }}</div>
+            <div class="stat-label">已完成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon pending">
+            <va-icon name="schedule" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.pending }}</div>
+            <div class="stat-label">待处理</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon cancelled">
+            <va-icon name="cancel" />
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ stats.cancelled }}</div>
+            <div class="stat-label">已取消</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单列表 -->
+    <div class="orders-table">
+      <va-data-table :items="orders" :columns="columns" :loading="loading" class="data-table">
+        <template #cell(orderNumber)="{ rowData }">
+          <span class="order-number">{{ rowData.orderNumber }}</span>
+        </template>
+
+        <template #cell(user)="{ rowData }">
+          <div class="user-info">
+            <va-avatar size="small" :src="rowData.user?.avatar" />
+            <div class="user-details">
+              <div class="user-name">{{ rowData.user?.name }}</div>
+              <div class="user-email">{{ rowData.user?.email }}</div>
+            </div>
+          </div>
+        </template>
+
+        <template #cell(status)="{ rowData }">
+          <span :class="`status-badge ${rowData.status}`">
+            {{ getStatusText(rowData.status) }}
+          </span>
+        </template>
+
+        <template #cell(total)="{ rowData }">
+          <span class="order-total">¥{{ rowData.total.toFixed(2) }}</span>
+        </template>
+
+        <template #cell(actions)="{ rowData }">
+          <div class="action-buttons">
+            <va-button preset="plain" size="small" icon="visibility" @click="viewOrder(rowData)" />
+            <va-button preset="plain" size="small" icon="edit" @click="editOrder(rowData)" />
+          </div>
+        </template>
+      </va-data-table>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { adminApi } from '@/api/admin'
+import { ref, onMounted } from 'vue'
 
 interface User {
   id: number
   name: string
   email: string
-  phone?: string
   avatar?: string
-}
-
-interface Product {
-  id: number
-  name: string
-  description: string
-  image: string
-}
-
-interface OrderItem {
-  id: number
-  product: Product
-  quantity: number
-  price: number
-}
-
-interface ShippingAddress {
-  name: string
-  phone: string
-  address: string
 }
 
 interface Order {
   id: number
   orderNumber: string
   user: User
-  status: string
+  status: 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled'
   total: number
   createdAt: string
-  updatedAt: string
-  items: OrderItem[]
-  shippingAddress: ShippingAddress
 }
 
-// 响应式数据
-const orders = ref<Order[]>([])
-const loading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('')
-const dateRange = ref<Date[]>([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalItems = ref(0)
-const showOrderDetail = ref(false)
-const selectedOrder = ref<Order | null>(null)
+const loading = ref(false)
 
-// 计算属性
-const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value))
-
-// 订单状态选项
-const statusOptions = [
-  { text: '待支付', value: 'pending' },
-  { text: '处理中', value: 'processing' },
-  { text: '已发货', value: 'shipped' },
-  { text: '已送达', value: 'delivered' },
-  { text: '已取消', value: 'cancelled' },
-]
-
-// 统计数据
 const stats = ref({
   total: 0,
   completed: 0,
@@ -335,41 +146,39 @@ const stats = ref({
   cancelled: 0,
 })
 
-// 表格列定义
+const orders = ref<Order[]>([])
+
+const statusOptions = [
+  { text: '待支付', value: 'pending' },
+  { text: '已支付', value: 'paid' },
+  { text: '已发货', value: 'shipped' },
+  { text: '已完成', value: 'completed' },
+  { text: '已取消', value: 'cancelled' },
+]
+
 const columns = [
   { key: 'orderNumber', label: '订单号' },
   { key: 'user', label: '用户' },
   { key: 'status', label: '状态' },
   { key: 'total', label: '金额' },
-  { key: 'createdAt', label: '下单时间' },
+  { key: 'createdAt', label: '创建时间' },
   { key: 'actions', label: '操作' },
 ]
 
-// 订单商品列定义
-const orderItemColumns = [
-  { key: 'product', label: '商品' },
-  { key: 'quantity', label: '数量' },
-  { key: 'price', label: '单价' },
-  { key: 'total', label: '小计' },
-]
+const searchOrders = () => {
+  loadOrders()
+}
 
-// 方法
+const resetSearch = () => {
+  searchQuery.value = ''
+  statusFilter.value = ''
+  loadOrders()
+}
+
 const loadOrders = async () => {
+  loading.value = true
   try {
-    loading.value = true
-    const params = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
-      search: searchQuery.value,
-      status: statusFilter.value,
-      startDate: dateRange.value[0]?.toISOString(),
-      endDate: dateRange.value[1]?.toISOString(),
-    }
-
-    const response = await adminApi.getOrders(params)
-    orders.value = response.data.orders
-    totalItems.value = response.data.total
-    stats.value = response.data.stats
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   } catch (error) {
     console.error('加载订单失败:', error)
   } finally {
@@ -377,85 +186,240 @@ const loadOrders = async () => {
   }
 }
 
-const searchOrders = () => {
-  currentPage.value = 1
-  loadOrders()
-}
-
-const resetSearch = () => {
-  searchQuery.value = ''
-  statusFilter.value = ''
-  dateRange.value = []
-  currentPage.value = 1
-  loadOrders()
-}
-
 const viewOrder = (order: Order) => {
-  selectedOrder.value = order
-  showOrderDetail.value = true
+  console.log('查看订单:', order)
 }
 
-const updateOrderStatus = async (order: Order, status: string) => {
-  try {
-    await adminApi.updateOrderStatus(order.id, status)
-    order.status = status
-    // 刷新统计数据
-    loadOrders()
-  } catch (error) {
-    console.error('更新订单状态失败:', error)
-  }
+const editOrder = (order: Order) => {
+  console.log('编辑订单:', order)
 }
 
-const getStatusColor = (status: string): string => {
-  const colors: Record<string, string> = {
-    pending: 'warning',
-    processing: 'info',
-    shipped: 'primary',
-    delivered: 'success',
-    cancelled: 'danger',
-  }
-  return colors[status] || 'secondary'
-}
-
-const getStatusText = (status: string): string => {
+const getStatusText = (status: string) => {
   const texts: Record<string, string> = {
     pending: '待支付',
-    processing: '处理中',
+    paid: '已支付',
     shipped: '已发货',
-    delivered: '已送达',
+    completed: '已完成',
     cancelled: '已取消',
   }
   return texts[status] || status
 }
 
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleString('zh-CN')
-}
-
-// 生命周期
 onMounted(() => {
   loadOrders()
 })
 </script>
 
 <style scoped>
-.orders-management {
-  padding: 1rem;
+.admin-orders {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.detail-item {
-  margin-bottom: 0.5rem;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.product-image {
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+}
+
+.filter-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-item {
+  min-width: 0;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
   width: 50px;
   height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
 }
 
-.order-detail {
-  max-height: 70vh;
-  overflow-y: auto;
+.stat-icon.total {
+  background: var(--va-primary);
+}
+
+.stat-icon.completed {
+  background: #10b981;
+}
+
+.stat-icon.pending {
+  background: #f59e0b;
+}
+
+.stat-icon.cancelled {
+  background: #ef4444;
+}
+
+.stat-details {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+  color: var(--va-text-primary);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--va-text-secondary);
+  font-weight: 500;
+}
+
+.orders-table {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 800px;
+}
+
+.order-number {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--va-primary);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--va-text-primary);
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: var(--va-text-secondary);
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.paid {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.shipped {
+  background: #e0e7ff;
+  color: #5b21b6;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.order-total {
+  font-weight: 600;
+  color: var(--va-text-primary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    justify-content: stretch;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-table {
+    padding: 1rem;
+  }
 }
 </style>
