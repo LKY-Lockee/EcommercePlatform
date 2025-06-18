@@ -3,14 +3,16 @@
     <h2 class="page-title">我的订单</h2>
 
     <!-- 订单状态筛选 -->
-    <div class="order-tabs">
-      <va-tabs v-model="activeTab">
-        <va-tab label="全部订单" />
-        <va-tab label="待付款" />
-        <va-tab label="待发货" />
-        <va-tab label="待收货" />
-        <va-tab label="已完成" />
-        <va-tab label="已取消" />
+    <div class="order-tabs-container">
+      <va-tabs v-model="activeTab" :grow="true">
+        <template #tabs>
+          <va-tab label="全部订单" />
+          <va-tab label="待付款" />
+          <va-tab label="待发货" />
+          <va-tab label="待收货" />
+          <va-tab label="已完成" />
+          <va-tab label="已取消" />
+        </template>
       </va-tabs>
     </div>
 
@@ -243,8 +245,8 @@ onMounted(() => {
   color: var(--va-text-primary);
 }
 
-.order-tabs {
-  margin-bottom: 2rem;
+.order-tabs-container {
+  margin: 2rem 4rem;
 }
 
 .orders-list {

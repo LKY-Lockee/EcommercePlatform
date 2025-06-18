@@ -625,22 +625,6 @@ onMounted(loadCategories)
   transform: scale(1.1);
 }
 
-.admin-icon {
-  background: rgba(var(--va-warning-rgb), 0.1);
-}
-
-.menu-item:hover .admin-icon {
-  background: rgba(var(--va-warning-rgb), 0.2);
-}
-
-.logout-icon {
-  background: rgba(var(--va-danger-rgb), 0.1);
-}
-
-.menu-item:hover .logout-icon {
-  background: rgba(var(--va-danger-rgb), 0.2);
-}
-
 .menu-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -654,14 +638,6 @@ onMounted(loadCategories)
   color: var(--va-text-secondary);
   margin-top: 0.2rem;
   line-height: 1.2;
-}
-
-.admin-item:hover .menu-label {
-  color: var(--va-warning);
-}
-
-.logout-item:hover .menu-label {
-  color: var(--va-danger);
 }
 
 .logout-label {
