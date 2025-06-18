@@ -1,22 +1,20 @@
 <template>
   <div class="register-view">
     <div class="register-container">
-      <va-card class="register-card">
-        <va-card-content>
-          <div class="register-header">
-            <h1 class="register-title">创建账户</h1>
-            <p class="register-subtitle">加入我们，开始购物之旅</p>
-          </div>
+      <div class="register-card">
+        <div class="card-header">
+          <h2 class="register-title">创建新账户</h2>
+          <p class="register-subtitle">开始您的购物之旅</p>
+        </div>
 
-          <va-form @submit.prevent="handleRegister">
-            <div class="form-group">
+        <div class="card-body">
+          <va-form @submit.prevent="handleRegister" class="register-form">
+            <div class="form-row">
+              <label class="form-label">用户名</label>
               <va-input
                 v-model="registerForm.username"
-                label="用户名"
                 placeholder="请输入用户名"
                 :rules="[required, usernameRule]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="person" />
@@ -24,14 +22,12 @@
               </va-input>
             </div>
 
-            <div class="form-group">
+            <div class="form-row">
+              <label class="form-label">邮箱地址</label>
               <va-input
                 v-model="registerForm.email"
-                label="邮箱"
-                placeholder="请输入邮箱地址"
+                placeholder="your@email.com"
                 :rules="[required, emailRule]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="email" />
@@ -39,14 +35,12 @@
               </va-input>
             </div>
 
-            <div class="form-group">
+            <div class="form-row">
+              <label class="form-label">手机号 <span class="optional">(可选)</span></label>
               <va-input
                 v-model="registerForm.phone"
-                label="手机号"
-                placeholder="请输入手机号（可选）"
+                placeholder="请输入手机号"
                 :rules="[phoneRule]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="phone" />
@@ -54,15 +48,13 @@
               </va-input>
             </div>
 
-            <div class="form-group">
+            <div class="form-row">
+              <label class="form-label">密码</label>
               <va-input
                 v-model="registerForm.password"
                 :type="showPassword ? 'text' : 'password'"
-                label="密码"
                 placeholder="请输入密码"
                 :rules="[required, passwordRule]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="lock" />
@@ -71,21 +63,19 @@
                   <va-icon
                     :name="showPassword ? 'visibility_off' : 'visibility'"
                     @click="showPassword = !showPassword"
-                    style="cursor: pointer"
+                    class="password-toggle"
                   />
                 </template>
               </va-input>
             </div>
 
-            <div class="form-group">
+            <div class="form-row">
+              <label class="form-label">确认密码</label>
               <va-input
                 v-model="confirmPassword"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                label="确认密码"
                 placeholder="请再次输入密码"
                 :rules="[required, confirmPasswordRule]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="lock" />
@@ -94,38 +84,23 @@
                   <va-icon
                     :name="showConfirmPassword ? 'visibility_off' : 'visibility'"
                     @click="showConfirmPassword = !showConfirmPassword"
-                    style="cursor: pointer"
+                    class="password-toggle"
                   />
                 </template>
               </va-input>
             </div>
 
-            <div class="form-agreement">
-              <va-checkbox v-model="agreeToTerms" :rules="[agreeRule]">
-                我已阅读并同意
-                <a href="#" class="terms-link">《用户协议》</a>
-                和
-                <a href="#" class="terms-link">《隐私政策》</a>
-              </va-checkbox>
-            </div>
-
-            <va-button
-              type="submit"
-              class="register-button"
-              size="large"
-              :loading="loading"
-              :disabled="!agreeToTerms"
-            >
-              注册
-            </va-button>
+            <va-button type="submit" :loading="loading" block size="large"> 创建账户 </va-button>
           </va-form>
 
           <div class="register-footer">
-            <span>已有账户？</span>
-            <va-button flat @click="$router.push('/login')"> 立即登录 </va-button>
+            <p>
+              已有账户？
+              <va-button preset="plain" @click="$router.push('/login')"> 立即登录 </va-button>
+            </p>
           </div>
-        </va-card-content>
-      </va-card>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -148,10 +123,8 @@ const registerForm = ref({
 const confirmPassword = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
-const agreeToTerms = ref(false)
 const loading = ref(false)
 
-// 验证规则
 const required = (value: string) => !!value || '此字段是必填的'
 
 const usernameRule = (value: string) => {
@@ -167,7 +140,7 @@ const emailRule = (value: string) => {
 }
 
 const phoneRule = (value: string) => {
-  if (!value) return true // 手机号是可选的
+  if (!value) return true
   const phonePattern = /^1[3-9]\d{9}$/
   return phonePattern.test(value) || '请输入有效的手机号'
 }
@@ -183,26 +156,14 @@ const confirmPasswordRule = (value: string) => {
   return value === registerForm.value.password || '两次密码输入不一致'
 }
 
-const agreeRule = (value: boolean) => {
-  return value || '请同意用户协议和隐私政策'
-}
-
 const handleRegister = async () => {
-  if (!validateForm()) {
-    return
-  }
+  if (!validateForm()) return
 
   loading.value = true
-
   try {
     const result = await userStore.register(registerForm.value)
-
     if (result.success) {
-      // 注册成功，跳转到首页
       router.push('/')
-    } else {
-      // 显示错误消息
-      console.error('注册失败:', result.message)
     }
   } catch (error) {
     console.error('注册错误:', error)
@@ -212,20 +173,8 @@ const handleRegister = async () => {
 }
 
 const validateForm = () => {
-  // 基本验证
-  if (!registerForm.value.username || !registerForm.value.email || !registerForm.value.password) {
-    return false
-  }
-
-  if (registerForm.value.password !== confirmPassword.value) {
-    return false
-  }
-
-  if (!agreeToTerms.value) {
-    return false
-  }
-
-  return true
+  const { username, email, password } = registerForm.value
+  return username.trim() && email.trim() && password.trim() && password === confirmPassword.value
 }
 </script>
 
@@ -235,30 +184,33 @@ const validateForm = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
+  background: #f5f5f5;
+  padding: 2rem 1rem;
 }
 
 .register-container {
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
 }
 
 .register-card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
 }
 
-.register-header {
+.card-header {
+  background: #fafafa;
+  padding: 2rem;
   text-align: center;
-  margin-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .register-title {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: var(--va-text-primary);
 }
@@ -267,40 +219,98 @@ const validateForm = () => {
   color: var(--va-text-secondary);
   margin: 0;
   font-size: 1rem;
+  font-weight: 400;
 }
 
-.form-group {
+.card-body {
+  padding: 2rem;
+}
+
+.register-form {
   margin-bottom: 1.5rem;
 }
 
-.form-input {
+.form-row {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.optional {
+  color: var(--va-text-secondary);
+  font-weight: 400;
+}
+
+.form-row .va-input {
   width: 100%;
 }
 
-.form-agreement {
-  margin-bottom: 2rem;
+.form-row :deep(.va-input__wrapper) {
+  width: 100%;
 }
 
-.terms-link {
+.form-row :deep(.va-input__container) {
+  width: 100%;
+}
+
+.form-row :deep(.va-input__field) {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.form-row :deep(.va-input__field:focus) {
+  background: white;
+  border-color: var(--va-primary);
+}
+
+.password-toggle {
+  cursor: pointer;
+  color: var(--va-text-secondary);
+  transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
   color: var(--va-primary);
-  text-decoration: none;
-}
-
-.terms-link:hover {
-  text-decoration: underline;
-}
-
-.register-button {
-  width: 100%;
-  margin-bottom: 1.5rem;
 }
 
 .register-footer {
   text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (max-width: 640px) {
+  .register-view {
+    padding: 1rem 0.5rem;
+  }
+
+  .register-container {
+    max-width: 100%;
+  }
+
+  .card-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .register-title {
+    font-size: 1.5rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    margin-bottom: 1.25rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -308,8 +318,20 @@ const validateForm = () => {
     padding: 0.5rem;
   }
 
+  .card-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
   .register-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .register-subtitle {
+    font-size: 0.875rem;
   }
 }
 </style>

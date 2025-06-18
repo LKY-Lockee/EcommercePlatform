@@ -1,22 +1,20 @@
 <template>
   <div class="login-view">
     <div class="login-container">
-      <va-card class="login-card">
-        <va-card-content>
-          <div class="login-header">
-            <h1 class="login-title">欢迎回来</h1>
-            <p class="login-subtitle">请登录您的账户</p>
-          </div>
+      <div class="login-card">
+        <div class="card-header">
+          <h2 class="login-title">欢迎回来</h2>
+          <p class="login-subtitle">登录您的账户继续购物</p>
+        </div>
 
-          <va-form @submit.prevent="handleLogin">
-            <div class="form-group">
+        <div class="card-body">
+          <va-form @submit.prevent="handleLogin" class="login-form">
+            <div class="form-row">
+              <label class="form-label">用户名或邮箱</label>
               <va-input
                 v-model="loginForm.username"
-                label="用户名或邮箱"
                 placeholder="请输入用户名或邮箱"
                 :rules="[required]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="person" />
@@ -24,15 +22,13 @@
               </va-input>
             </div>
 
-            <div class="form-group">
+            <div class="form-row">
+              <label class="form-label">密码</label>
               <va-input
                 v-model="loginForm.password"
                 :type="showPassword ? 'text' : 'password'"
-                label="密码"
                 placeholder="请输入密码"
                 :rules="[required]"
-                outline
-                class="form-input"
               >
                 <template #prependInner>
                   <va-icon name="lock" />
@@ -41,7 +37,7 @@
                   <va-icon
                     :name="showPassword ? 'visibility_off' : 'visibility'"
                     @click="showPassword = !showPassword"
-                    style="cursor: pointer"
+                    class="password-toggle"
                   />
                 </template>
               </va-input>
@@ -49,38 +45,22 @@
 
             <div class="form-options">
               <va-checkbox v-model="rememberMe" label="记住我" />
-              <va-button flat size="small" @click="handleForgotPassword"> 忘记密码？ </va-button>
+              <va-button preset="plain" size="small" @click="handleForgotPassword">
+                忘记密码？
+              </va-button>
             </div>
 
-            <va-button type="submit" class="login-button" size="large" :loading="loading">
-              登录
-            </va-button>
+            <va-button type="submit" :loading="loading" block size="large"> 登录 </va-button>
           </va-form>
 
           <div class="login-footer">
-            <span>还没有账户？</span>
-            <va-button flat @click="$router.push('/register')"> 立即注册 </va-button>
+            <p>
+              还没有账户？
+              <va-button preset="plain" @click="$router.push('/register')"> 立即注册 </va-button>
+            </p>
           </div>
-
-          <va-divider>
-            <span style="color: var(--va-text-secondary); font-size: 0.9rem">或</span>
-          </va-divider>
-
-          <div class="social-login">
-            <va-button
-              outline
-              icon="wechat"
-              class="social-button"
-              @click="handleSocialLogin('wechat')"
-            >
-              微信登录
-            </va-button>
-            <va-button outline icon="qq" class="social-button" @click="handleSocialLogin('qq')">
-              QQ登录
-            </va-button>
-          </div>
-        </va-card-content>
-      </va-card>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -105,22 +85,14 @@ const loading = ref(false)
 const required = (value: string) => !!value || '此字段是必填的'
 
 const handleLogin = async () => {
-  if (!loginForm.value.username || !loginForm.value.password) {
-    return
-  }
+  if (!loginForm.value.username.trim() || !loginForm.value.password.trim()) return
 
   loading.value = true
-
   try {
     const result = await userStore.login(loginForm.value)
-
     if (result.success) {
-      // 登录成功，跳转到首页或之前的页面
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/')
-    } else {
-      // 显示错误消息
-      console.error('登录失败:', result.message)
     }
   } catch (error) {
     console.error('登录错误:', error)
@@ -130,13 +102,7 @@ const handleLogin = async () => {
 }
 
 const handleForgotPassword = () => {
-  // 处理忘记密码逻辑
-  console.log('忘记密码')
-}
-
-const handleSocialLogin = (platform: string) => {
-  // 处理第三方登录逻辑
-  console.log('第三方登录:', platform)
+  // TODO: 实现忘记密码功能
 }
 </script>
 
@@ -146,30 +112,33 @@ const handleSocialLogin = (platform: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
+  background: #f5f5f5;
+  padding: 2rem 1rem;
 }
 
 .login-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 .login-card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
 }
 
-.login-header {
+.card-header {
+  background: #fafafa;
+  padding: 2rem;
   text-align: center;
-  margin-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .login-title {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: var(--va-text-primary);
 }
@@ -178,44 +147,106 @@ const handleSocialLogin = (platform: string) => {
   color: var(--va-text-secondary);
   margin: 0;
   font-size: 1rem;
+  font-weight: 400;
 }
 
-.form-group {
+.card-body {
+  padding: 2rem;
+}
+
+.login-form {
   margin-bottom: 1.5rem;
 }
 
-.form-input {
+.form-row {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--va-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-row .va-input {
   width: 100%;
+}
+
+.form-row :deep(.va-input__wrapper) {
+  width: 100%;
+}
+
+.form-row :deep(.va-input__container) {
+  width: 100%;
+}
+
+.form-row :deep(.va-input__field) {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.form-row :deep(.va-input__field:focus) {
+  background: white;
+  border-color: var(--va-primary);
+}
+
+.password-toggle {
+  cursor: pointer;
+  color: var(--va-text-secondary);
+  transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+  color: var(--va-primary);
 }
 
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-}
-
-.login-button {
-  width: 100%;
   margin-bottom: 1.5rem;
 }
 
 .login-footer {
   text-align: center;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
 }
 
-.social-login {
-  display: flex;
-  gap: 1rem;
-}
+@media (max-width: 640px) {
+  .login-view {
+    padding: 1rem 0.5rem;
+  }
 
-.social-button {
-  flex: 1;
+  .login-container {
+    max-width: 100%;
+  }
+
+  .card-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .login-title {
+    font-size: 1.5rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-options {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 480px) {
@@ -223,13 +254,20 @@ const handleSocialLogin = (platform: string) => {
     padding: 0.5rem;
   }
 
-  .login-title {
-    font-size: 1.5rem;
+  .card-header {
+    padding: 1.5rem 1rem;
   }
 
-  .social-login {
-    flex-direction: column;
-    gap: 0.5rem;
+  .card-body {
+    padding: 1rem;
+  }
+
+  .login-title {
+    font-size: 1.25rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.875rem;
   }
 }
 </style>
