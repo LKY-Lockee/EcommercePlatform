@@ -1,28 +1,37 @@
 <template>
   <div class="admin-orders">
-    <div class="page-header">
-      <h2 class="page-title">订单管理</h2>
-    </div>
-
-    <!-- 搜索过滤器 -->
-    <div class="filter-section">
-      <div class="filter-row">
+    <!-- 搜索和筛选 -->
+    <div class="header-section">
+      <div class="filter-section">
         <div class="filter-item">
-          <va-input v-model="searchQuery" placeholder="搜索订单号、用户..." clearable />
+          <va-input
+            v-model="searchQuery"
+            placeholder="搜索订单号、用户名"
+            clearable
+            @input="loadOrders"
+            class="search-input"
+          >
+            <template #appendInner>
+              <va-button
+                preset="plain"
+                @click="loadOrders"
+                icon="search"
+                size="small"
+                color="primary"
+              />
+            </template>
+          </va-input>
         </div>
         <div class="filter-item">
           <va-select
             v-model="statusFilter"
+            placeholder="选择订单状态"
             :options="statusOptions"
             text-by="text"
             value-by="value"
-            placeholder="订单状态"
             clearable
+            @update:modelValue="loadOrders"
           />
-        </div>
-        <div class="filter-actions">
-          <va-button @click="searchOrders">搜索</va-button>
-          <va-button preset="secondary" @click="resetSearch">重置</va-button>
         </div>
       </div>
     </div>
@@ -80,7 +89,15 @@
 
     <!-- 订单列表 -->
     <div class="orders-table">
-      <va-data-table :items="orders" :columns="columns" :loading="loading" class="data-table">
+      <va-data-table
+        :items="orders"
+        :columns="columns"
+        :loading="loading"
+        :pagination="pagination"
+        @update:pagination="updatePagination"
+        no-data-html="暂无订单"
+        class="data-table"
+      >
         <template #cell(order_number)="{ rowData }">
           <span class="order-number">{{ rowData.order_number }}</span>
         </template>
@@ -96,34 +113,106 @@
         </template>
 
         <template #cell(status)="{ rowData }">
-          <span :class="`status-badge ${rowData.status}`">
+          <va-chip :color="getStatusColor(rowData.status)" size="small" square>
             {{ getStatusText(rowData.status) }}
-          </span>
+          </va-chip>
         </template>
 
         <template #cell(total_amount)="{ rowData }">
-          <span class="order-total">¥{{ rowData.total_amount.toFixed(2) }}</span>
+          <span class="order-total">¥{{ Number(rowData.total_amount).toFixed(2) }}</span>
         </template>
 
-        <template #cell(actions)="">
+        <template #cell(created_at)="{ rowData }">
+          <span class="order-date">{{ formatDate(rowData.created_at) }}</span>
+        </template>
+
+        <template #cell(actions)="{ rowData }">
           <div class="action-buttons">
-            <va-button preset="plain" size="small" icon="visibility" @click="viewOrder()" />
-            <va-button preset="plain" size="small" icon="edit" @click="editOrder()" />
+            <va-button
+              preset="plain"
+              size="small"
+              icon="edit"
+              @click="editOrder(rowData)"
+              color="warning"
+            />
+            <va-button
+              preset="plain"
+              size="small"
+              icon="delete"
+              @click="deleteOrder(rowData)"
+              color="danger"
+            />
           </div>
         </template>
       </va-data-table>
     </div>
+
+    <!-- 编辑订单弹窗 -->
+    <va-modal
+      v-model="showEditDialog"
+      :title="'编辑订单'"
+      size="large"
+      max-width="600px"
+      hide-default-actions
+      class="order-modal"
+    >
+      <div class="order-form">
+        <va-form ref="orderFormRef" @submit.prevent="handleFormSubmit">
+          <!-- 订单状态卡片 -->
+          <va-card class="form-card">
+            <va-card-title class="form-section-title">订单状态</va-card-title>
+            <va-card-content>
+              <div class="form-grid">
+                <div class="form-field">
+                  <va-select
+                    v-model="orderForm.status"
+                    label="订单状态"
+                    placeholder="请选择订单状态"
+                    :options="statusOptions"
+                    text-by="text"
+                    value-by="value"
+                    :rules="[required]"
+                    required
+                  />
+                </div>
+              </div>
+            </va-card-content>
+          </va-card>
+        </va-form>
+      </div>
+
+      <div class="form-actions">
+        <va-button @click="closeEditDialog" preset="secondary" size="large"> 取消 </va-button>
+        <va-button @click="handleFormSubmit" color="primary" size="large"> 保存 </va-button>
+      </div>
+    </va-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminOrders } from '@/api/admin'
+import { getAdminOrders, updateAdminOrder, deleteAdminOrder } from '@/api/admin'
 import type { AdminOrder, OrderStatus } from '@/types'
 
 const searchQuery = ref('')
 const statusFilter = ref<OrderStatus | ''>('')
 const loading = ref(false)
+const submitting = ref(false)
+const showEditDialog = ref(false)
+const selectedOrder = ref<AdminOrder | null>(null)
+
+// 分页
+const pagination = ref({
+  page: 1,
+  perPage: 10,
+  total: 0,
+})
+
+// 表单
+const orderFormRef = ref()
+const orderForm = ref({
+  status: '' as OrderStatus | '',
+})
 
 const stats = ref({
   total: 0,
@@ -143,21 +232,20 @@ const statusOptions = [
 ]
 
 const columns = [
-  { key: 'order_number', label: '订单号' },
+  { key: 'order_number', label: '订单号', sortable: true },
   { key: 'user', label: '用户' },
   { key: 'status', label: '状态' },
-  { key: 'total_amount', label: '金额' },
-  { key: 'created_at', label: '创建时间' },
-  { key: 'actions', label: '操作' },
+  { key: 'total_amount', label: '金额', sortable: true },
+  { key: 'created_at', label: '创建时间', sortable: true },
+  { key: 'actions', label: '操作', width: 100 },
 ]
 
-const searchOrders = () => {
-  loadOrders()
-}
+// 表单验证规则
+const required = (value: unknown) => !!value || '此字段为必填项'
 
-const resetSearch = () => {
-  searchQuery.value = ''
-  statusFilter.value = ''
+// 更新分页
+const updatePagination = (newPagination: typeof pagination.value) => {
+  pagination.value = { ...newPagination }
   loadOrders()
 }
 
@@ -167,14 +255,21 @@ const loadOrders = async () => {
     const response = await getAdminOrders({
       search: searchQuery.value,
       status: statusFilter.value || undefined,
+      page: pagination.value.page,
+      limit: pagination.value.perPage,
     })
     const responseData = response.data
     if (responseData && responseData.items) {
       orders.value = responseData.items
 
+      // 更新分页信息
+      if (responseData.pagination) {
+        pagination.value.total = responseData.pagination.total
+      }
+
       // 计算统计信息
       stats.value = {
-        total: responseData.pagination.total || 0,
+        total: responseData.pagination?.total || 0,
         completed: orders.value.filter((o) => o.status === 'delivered').length,
         pending: orders.value.filter((o) => o.status === 'pending').length,
         cancelled: orders.value.filter((o) => o.status === 'cancelled').length,
@@ -190,6 +285,7 @@ const loadOrders = async () => {
     }
   } catch (error) {
     console.error('加载订单失败:', error)
+    console.log('加载订单失败')
     orders.value = []
     stats.value = {
       total: 0,
@@ -202,10 +298,54 @@ const loadOrders = async () => {
   }
 }
 
-const viewOrder = () => {
+const editOrder = (order: AdminOrder) => {
+  selectedOrder.value = order
+  orderForm.value = {
+    status: order.status,
+  }
+  showEditDialog.value = true
 }
 
-const editOrder = async () => {
+const deleteOrder = async (order: AdminOrder) => {
+  try {
+    if (confirm(`确定要删除订单 ${order.order_number} 吗？`)) {
+      await deleteAdminOrder(order.id)
+      console.log('订单删除成功')
+      loadOrders()
+    }
+  } catch (error) {
+    console.error('删除订单失败:', error)
+    console.log('删除订单失败')
+  }
+}
+
+const closeEditDialog = () => {
+  showEditDialog.value = false
+  selectedOrder.value = null
+  orderForm.value = {
+    status: '',
+  }
+}
+
+const handleFormSubmit = async () => {
+  if (!selectedOrder.value) return
+
+  try {
+    submitting.value = true
+    await updateAdminOrder(selectedOrder.value.id, {
+      status: orderForm.value.status as OrderStatus,
+    })
+
+    console.log('订单更新成功')
+
+    closeEditDialog()
+    loadOrders()
+  } catch (error) {
+    console.error('更新订单失败:', error)
+    console.log('更新订单失败')
+  } finally {
+    submitting.value = false
+  }
 }
 
 const getStatusText = (status: OrderStatus) => {
@@ -219,6 +359,27 @@ const getStatusText = (status: OrderStatus) => {
   return texts[status] || status
 }
 
+const getStatusColor = (status: OrderStatus) => {
+  const colors: Record<OrderStatus, string> = {
+    pending: 'warning',
+    paid: 'info',
+    shipped: 'primary',
+    delivered: 'success',
+    cancelled: 'danger',
+  }
+  return colors[status] || 'secondary'
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 onMounted(() => {
   loadOrders()
 })
@@ -230,21 +391,9 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-.page-header {
+.header-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--va-text-primary);
-}
-
-.filter-section {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
@@ -253,20 +402,36 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.filter-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+.filter-section {
+  display: flex;
   gap: 1rem;
-  align-items: end;
 }
 
 .filter-item {
   min-width: 0;
 }
 
-.filter-actions {
-  display: flex;
-  gap: 0.5rem;
+.search-input {
+  width: 100%;
+  border-radius: 25px;
+}
+
+.search-input :deep(.va-input__container) {
+  border-radius: 25px;
+  background: rgba(var(--va-background-secondary-rgb), 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  padding-right: 40px;
+}
+
+.search-input :deep(.va-input__container):hover {
+  border-color: var(--va-primary);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.1);
+}
+
+.search-input :deep(.va-input__container--focused) {
+  border-color: var(--va-primary);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.15);
 }
 
 .stats-grid {
@@ -282,6 +447,12 @@ onMounted(() => {
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .stat-content {
@@ -349,9 +520,13 @@ onMounted(() => {
 }
 
 .order-number {
-  font-family: monospace;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
   font-weight: 600;
   color: var(--va-primary);
+  background: rgba(var(--va-primary-rgb), 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
 
 .user-info {
@@ -369,6 +544,7 @@ onMounted(() => {
 .user-name {
   font-weight: 500;
   color: var(--va-text-primary);
+  font-size: 0.875rem;
 }
 
 .user-email {
@@ -376,42 +552,15 @@ onMounted(() => {
   color: var(--va-text-secondary);
 }
 
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.status-badge.pending {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.status-badge.paid {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-badge.shipped {
-  background: #e0e7ff;
-  color: #5b21b6;
-}
-
-.status-badge.completed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.cancelled {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .order-total {
   font-weight: 600;
   color: var(--va-text-primary);
+  font-size: 0.875rem;
+}
+
+.order-date {
+  font-size: 0.875rem;
+  color: var(--va-text-secondary);
 }
 
 .action-buttons {
@@ -419,21 +568,125 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+/* 弹窗样式 */
+.order-modal :deep(.va-modal__container) {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.order-modal :deep(.va-modal__title) {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.order-form {
+  padding: 0;
+}
+
+.form-card {
+  margin-bottom: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-section-title {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.form-card :deep(.va-card__title) {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+}
+
+.form-card :deep(.va-card__content) {
+  padding: 1.75rem 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-field {
+  min-width: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 0 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+}
+
+.form-actions .va-button {
+  min-width: 120px;
+  height: 44px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .header-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-section {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 768px) {
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-actions {
-    justify-content: stretch;
-  }
-
   .stats-grid {
     grid-template-columns: 1fr;
   }
 
   .orders-table {
     padding: 1rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-section {
+    padding: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-content {
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.25rem;
   }
 }
 </style>

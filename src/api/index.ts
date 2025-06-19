@@ -28,10 +28,18 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token过期或无效，清除本地存储并跳转到登录页
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+      const token = localStorage.getItem('token')
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+
+      // 只有在有token且不在登录页面时才进行跳转
+      // 这样可以避免登录失败时的页面刷新
+      if (token && currentPath !== '/login') {
+        // Token过期或无效，清除本地存储并跳转到登录页
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        window.location.href = '/login'
+      }
+      // 如果在登录页面或没有token，让错误正常抛出给调用方处理
     }
     return Promise.reject(error)
   },

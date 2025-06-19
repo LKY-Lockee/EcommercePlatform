@@ -107,7 +107,7 @@
               </div>
 
               <div v-if="categoryForm.image" class="image-preview">
-                <img :src="categoryForm.image" alt="分类预览" @error="handleImageError" />
+                <img :src="categoryForm.image" alt="分类预览" />
               </div>
             </va-card-content>
           </va-card>
@@ -264,12 +264,6 @@ const handleFormSubmit = async () => {
 const cancelForm = () => {
   showCategoryDialog.value = false
   resetCategoryForm()
-}
-
-// 图片错误处理
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.src = '/placeholder.png'
 }
 
 const deleteCategoryConfirm = (category: Category) => {

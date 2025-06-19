@@ -199,7 +199,7 @@ export interface Order {
   user?: User
   status: OrderStatus
   payment_status: PaymentStatus
-  total_amount: number
+  total_amount: string
   shipping_address: string
   payment_method: string
   items: OrderItem[]

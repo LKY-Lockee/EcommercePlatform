@@ -69,9 +69,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useToast } from 'vuestic-ui'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { notify } = useToast()
 
 const loginForm = ref({
   username: '',
@@ -93,6 +95,11 @@ const handleLogin = async () => {
     if (result.success) {
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/')
+    } else {
+      notify({
+        message: result.message || '登录失败',
+        color: 'danger',
+      })
     }
   } catch (error) {
     console.error('登录错误:', error)

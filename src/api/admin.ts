@@ -18,8 +18,7 @@ import type {
 // ===== 管理员统计数据 =====
 
 // 获取仪表盘统计数据
-export const getDashboardStats = () =>
-  request.get<AdminStats>('/admin/dashboard')
+export const getDashboardStats = () => request.get<AdminStats>('/admin/dashboard')
 
 // ===== 用户管理 =====
 
@@ -28,16 +27,14 @@ export const getAdminUsers = (params?: AdminUserListParams) =>
   request.get<PaginationResponse<AdminUser>>('/admin/users', { params })
 
 // 获取用户详情
-export const getAdminUserDetail = (id: number) =>
-  request.get<AdminUser>(`/admin/users/${id}`)
+export const getAdminUserDetail = (id: number) => request.get<AdminUser>(`/admin/users/${id}`)
 
 // 更新用户信息
 export const updateAdminUser = (id: number, data: Partial<AdminUser>) =>
   request.put<AdminUser>(`/admin/users/${id}`, data)
 
 // 删除用户
-export const deleteUser = (id: number) =>
-  request.delete<{ message: string }>(`/admin/users/${id}`)
+export const deleteUser = (id: number) => request.delete<{ message: string }>(`/admin/users/${id}`)
 
 // 批量删除用户
 export const deleteUsers = (ids: number[]) =>
@@ -45,9 +42,7 @@ export const deleteUsers = (ids: number[]) =>
 
 // 重置用户密码
 export const resetUserPassword = (id: number) =>
-  request.put<{ message: string; password: string }>(
-    `/admin/users/${id}/reset-password`,
-  )
+  request.put<{ message: string; password: string }>(`/admin/users/${id}/reset-password`)
 
 // ===== 商品管理 =====
 
@@ -91,8 +86,14 @@ export const getAdminOrders = (params?: AdminOrderListParams) =>
   request.get<PaginationResponse<AdminOrder>>('/admin/orders', { params })
 
 // 获取订单详情
-export const getAdminOrderDetail = (id: number) =>
-  request.get<AdminOrder>(`/admin/orders/${id}`)
+export const getAdminOrderDetail = (id: number) => request.get<AdminOrder>(`/admin/orders/${id}`)
+
+// 更新订单状态
+export const updateAdminOrder = (id: number, data: { status: string }) =>
+  request.put<AdminOrder>(`/admin/orders/${id}`, data)
+
+// 删除订单
+export const deleteAdminOrder = (id: number) => request.delete(`/admin/orders/${id}`)
 
 // ===== 分类管理 =====
 
@@ -130,8 +131,7 @@ export const uploadCategoryImage = (file: File) => {
 export const getAdminBanners = () => request.get<Banner[]>('/admin/banners')
 
 // 创建横幅
-export const createBanner = (data: BannerCreateData) =>
-  request.post<Banner>('/admin/banners', data)
+export const createBanner = (data: BannerCreateData) => request.post<Banner>('/admin/banners', data)
 
 // 更新横幅
 export const updateBanner = (id: number, data: Partial<BannerCreateData>) =>
@@ -157,8 +157,7 @@ export const uploadBannerImage = (file: File) => {
 // ===== 系统设置 =====
 
 // 获取系统设置
-export const getSystemSettings = () =>
-  request.get<Record<string, unknown>>('/admin/settings')
+export const getSystemSettings = () => request.get<Record<string, unknown>>('/admin/settings')
 
 // 更新系统设置
 export const updateSystemSettings = (data: Record<string, unknown>) =>

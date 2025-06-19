@@ -69,7 +69,7 @@
           </template>
 
           <template #cell(total_amount)="{ rowData }">
-            ¥{{ formatMoney(rowData.total_amount) }}
+            ¥{{ formatMoney(Number(rowData.total_amount)) }}
           </template>
 
           <template #cell(created_at)="{ rowData }">

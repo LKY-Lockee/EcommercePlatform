@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, LoginData, RegisterData } from '@/types'
-import { login, register, getUserInfo, updateUserInfo } from '@/api/user'
+import { login as loginApi, register as registerApi, getUserInfo, updateUserInfo } from '@/api/user'
 
 interface ErrorResponse {
   response?: {
@@ -32,9 +32,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 登录
-  const loginUser = async (loginData: LoginData) => {
+  const login = async (loginData: LoginData) => {
     try {
-      const response = await login(loginData)
+      const response = await loginApi(loginData)
       const { user: userData, token: userToken } = response.data
 
       user.value = userData
@@ -54,9 +54,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 注册
-  const registerUser = async (registerData: RegisterData) => {
+  const register = async (registerData: RegisterData) => {
     try {
-      const response = await register(registerData)
+      const response = await registerApi(registerData)
       const { user: userData, token: userToken } = response.data
 
       user.value = userData
@@ -123,8 +123,8 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn,
     isAdmin,
     initUser,
-    login: loginUser,
-    register: registerUser,
+    login,
+    register,
     logout,
     fetchProfile,
     updateProfile,

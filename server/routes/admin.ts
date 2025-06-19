@@ -28,6 +28,18 @@ interface CategoryRow {
   created_at: string
 }
 
+interface OrderRow {
+  id: number
+  order_number: string
+  user_id: number
+  status: string
+  total_amount: number
+  created_at: string
+  username?: string
+  email?: string
+  avatar?: string
+}
+
 interface UserRow {
   role: string
 }
@@ -82,7 +94,7 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
 
     let query = 'SELECT id, username, email, phone, role, created_at FROM users'
     let countQuery = 'SELECT COUNT(*) as total FROM users'
-    const params: (string | number)[] = []
+    const params: string[] = []
 
     if (search) {
       query += ' WHERE username LIKE ? OR email LIKE ?'
@@ -91,21 +103,21 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
     }
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    params.push(Number(limit), offset)
+    params.push(String(limit), String(offset))
 
-    const [users] = await pool.execute(query, params)
+    const [items] = await pool.execute(query, params)
     const [countResult] = await pool.execute(
       countQuery,
       search ? [`%${search}%`, `%${search}%`] : [],
     )
 
     res.json({
-      users,
+      items,
       pagination: {
-        current: Number(page),
-        total: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
-        pageSize: Number(limit),
-        totalItems: (countResult as TotalResult[])[0].total,
+        current_page: Number(page),
+        per_page: Number(limit),
+        total: (countResult as TotalResult[])[0].total,
+        total_pages: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
       },
     })
   } catch (error) {
@@ -181,10 +193,10 @@ router.get('/products', async (req: Request, res: Response): Promise<void> => {
     res.json({
       items,
       pagination: {
-        current: Number(page),
-        total: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
-        pageSize: Number(limit),
-        totalItems: (countResult as TotalResult[])[0].total,
+        current_page: Number(page),
+        per_page: Number(limit),
+        total: (countResult as TotalResult[])[0].total,
+        total_pages: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
       },
     })
   } catch (error) {
@@ -279,13 +291,13 @@ router.get('/orders', async (req: Request, res: Response): Promise<void> => {
     const offset = (Number(page) - 1) * Number(limit)
 
     let query = `
-      SELECT o.*, u.username, u.email
+      SELECT o.*, u.username, u.email, u.avatar
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
     `
     let countQuery = 'SELECT COUNT(*) as total FROM orders o LEFT JOIN users u ON o.user_id = u.id'
     const conditions: string[] = []
-    const params: (string | number)[] = []
+    const params: string[] = []
 
     if (status) {
       conditions.push('o.status = ?')
@@ -304,18 +316,31 @@ router.get('/orders', async (req: Request, res: Response): Promise<void> => {
     }
 
     query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?'
-    params.push(Number(limit), offset)
+    params.push(String(limit), String(offset))
 
     const [orders] = await pool.execute(query, params)
     const [countResult] = await pool.execute(countQuery, params.slice(0, -2))
 
+    // 格式化订单数据，将用户信息组装为对象
+    const formattedOrders = (orders as OrderRow[]).map((order) => {
+      const { username, email, avatar, ...orderData } = order
+      return {
+        ...orderData,
+        user: {
+          username,
+          email,
+          avatar,
+        },
+      }
+    })
+
     res.json({
-      orders,
+      items: formattedOrders,
       pagination: {
-        current: Number(page),
-        total: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
-        pageSize: Number(limit),
-        totalItems: (countResult as TotalResult[])[0].total,
+        current_page: Number(page),
+        per_page: Number(limit),
+        total: (countResult as TotalResult[])[0].total,
+        total_pages: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),
       },
     })
   } catch (error) {
@@ -324,7 +349,115 @@ router.get('/orders', async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-// 更新订单状态
+// 获取订单详情
+router.get('/orders/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    const [orders] = await pool.execute(
+      `
+      SELECT o.*, u.username, u.email, u.avatar
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `,
+      [id],
+    )
+
+    const orderList = orders as OrderRow[]
+    if (orderList.length === 0) {
+      res.status(404).json({ message: '订单不存在' })
+      return
+    }
+
+    const order = orderList[0]
+    const { username, email, avatar, ...orderData } = order
+    const orderWithUser = {
+      ...orderData,
+      user: {
+        username,
+        email,
+        avatar,
+      },
+    }
+
+    res.json(orderWithUser)
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    res.status(500).json({ message: '获取订单详情失败' })
+  }
+})
+
+// 更新订单
+router.put('/orders/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { status } = req.body
+
+    if (!status) {
+      res.status(400).json({ message: '状态不能为空' })
+      return
+    }
+
+    await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id])
+
+    // 返回更新后的订单信息
+    const [orders] = await pool.execute(
+      `
+      SELECT o.*, u.username, u.email, u.avatar
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `,
+      [id],
+    )
+
+    const orderList = orders as OrderRow[]
+    if (orderList.length === 0) {
+      res.status(404).json({ message: '订单不存在' })
+      return
+    }
+
+    const order = orderList[0]
+    const { username, email, avatar, ...orderData } = order
+    const orderWithUser = {
+      ...orderData,
+      user: {
+        username,
+        email,
+        avatar,
+      },
+    }
+
+    res.json(orderWithUser)
+  } catch (error) {
+    console.error('更新订单失败:', error)
+    res.status(500).json({ message: '更新订单失败' })
+  }
+})
+
+// 删除订单
+router.delete('/orders/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    // 检查订单是否存在
+    const [existingOrders] = await pool.execute('SELECT id FROM orders WHERE id = ?', [id])
+
+    if ((existingOrders as OrderRow[]).length === 0) {
+      res.status(404).json({ message: '订单不存在' })
+      return
+    }
+
+    await pool.execute('DELETE FROM orders WHERE id = ?', [id])
+    res.json({ message: '订单删除成功' })
+  } catch (error) {
+    console.error('删除订单失败:', error)
+    res.status(500).json({ message: '删除订单失败' })
+  }
+})
+
+// 更新订单状态 (保留旧接口兼容性)
 router.put('/orders/:id/status', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
