@@ -76,9 +76,6 @@ export interface Category {
   name: string
   description?: string
   image?: string
-  parent_id?: number
-  sort_order: number
-  is_active: boolean
   created_at: string
   children?: Category[]
 }
@@ -87,9 +84,6 @@ export interface CategoryCreateData {
   name: string
   description?: string
   image?: string
-  parent_id?: number
-  sort_order?: number
-  is_active?: boolean
 }
 
 // ===== 商品相关类型 =====

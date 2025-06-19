@@ -20,6 +20,18 @@ interface InsertResult {
   affectedRows: number
 }
 
+interface CategoryRow {
+  id: number
+  name: string
+  description?: string
+  image?: string
+  created_at: string
+}
+
+interface UserRow {
+  role: string
+}
+
 const router = express.Router()
 
 // 所有管理员路由都需要管理员权限
@@ -109,7 +121,7 @@ router.delete('/users/:id', async (req: Request, res: Response): Promise<void> =
 
     // 不能删除管理员
     const [userRows] = await pool.execute('SELECT role FROM users WHERE id = ?', [id])
-    const users = userRows as Array<{ role: string }>
+    const users = userRows as UserRow[]
 
     if (users.length === 0) {
       res.status(404).json({ message: '用户不存在' })
@@ -328,6 +340,202 @@ router.put('/orders/:id/status', async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error('更新订单状态失败:', error)
     res.status(500).json({ message: '更新订单状态失败' })
+  }
+})
+
+// ===== 分类管理 =====
+
+// 获取所有分类
+router.get('/categories', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const [categories] = await pool.execute(`
+      SELECT id, name, description, image, created_at
+      FROM categories
+      ORDER BY created_at DESC
+    `)
+
+    res.json(categories)
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    res.status(500).json({ message: '获取分类列表失败' })
+  }
+})
+
+// 创建分类
+router.post('/categories', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, description, image } = req.body
+
+    if (!name) {
+      res.status(400).json({ message: '分类名称为必填项' })
+      return
+    }
+
+    // 检查分类名称是否已存在
+    const [existingCategories] = await pool.execute('SELECT id FROM categories WHERE name = ?', [
+      name,
+    ])
+
+    if ((existingCategories as CategoryRow[]).length > 0) {
+      res.status(400).json({ message: '分类名称已存在' })
+      return
+    }
+
+    const [result] = await pool.execute(
+      'INSERT INTO categories (name, description, image) VALUES (?, ?, ?)',
+      [name, description || '', image || ''],
+    )
+
+    // 获取新创建的分类
+    const [newCategory] = await pool.execute('SELECT * FROM categories WHERE id = ?', [
+      (result as InsertResult).insertId,
+    ])
+
+    res.status(201).json({
+      message: '分类创建成功',
+      category: (newCategory as CategoryRow[])[0],
+    })
+  } catch (error) {
+    console.error('创建分类失败:', error)
+    res.status(500).json({ message: '创建分类失败' })
+  }
+})
+
+// 更新分类
+router.put('/categories/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { name, description, image } = req.body
+
+    if (!name) {
+      res.status(400).json({ message: '分类名称为必填项' })
+      return
+    }
+
+    // 检查分类是否存在
+    const [existingCategory] = await pool.execute('SELECT id FROM categories WHERE id = ?', [id])
+
+    if ((existingCategory as CategoryRow[]).length === 0) {
+      res.status(404).json({ message: '分类不存在' })
+      return
+    }
+
+    // 检查分类名称是否已被其他分类使用
+    const [duplicateCategories] = await pool.execute(
+      'SELECT id FROM categories WHERE name = ? AND id != ?',
+      [name, id],
+    )
+
+    if ((duplicateCategories as CategoryRow[]).length > 0) {
+      res.status(400).json({ message: '分类名称已存在' })
+      return
+    }
+
+    await pool.execute('UPDATE categories SET name = ?, description = ?, image = ? WHERE id = ?', [
+      name,
+      description || '',
+      image || '',
+      id,
+    ])
+
+    // 获取更新后的分类
+    const [updatedCategory] = await pool.execute('SELECT * FROM categories WHERE id = ?', [id])
+
+    res.json({
+      message: '分类更新成功',
+      category: (updatedCategory as CategoryRow[])[0],
+    })
+  } catch (error) {
+    console.error('更新分类失败:', error)
+    res.status(500).json({ message: '更新分类失败' })
+  }
+})
+
+// 删除分类
+router.delete('/categories/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    // 检查分类是否存在
+    const [existingCategory] = await pool.execute('SELECT id, name FROM categories WHERE id = ?', [
+      id,
+    ])
+
+    if ((existingCategory as CategoryRow[]).length === 0) {
+      res.status(404).json({ message: '分类不存在' })
+      return
+    }
+
+    // 检查是否有商品使用了这个分类
+    const [productsUsingCategory] = await pool.execute(
+      'SELECT COUNT(*) as count FROM products WHERE category_id = ?',
+      [id],
+    )
+
+    if ((productsUsingCategory as CountResult[])[0].count > 0) {
+      res.status(400).json({
+        message: '该分类下还有商品，无法删除。请先将商品移至其他分类。',
+      })
+      return
+    }
+
+    await pool.execute('DELETE FROM categories WHERE id = ?', [id])
+    res.json({ message: '分类删除成功' })
+  } catch (error) {
+    console.error('删除分类失败:', error)
+    res.status(500).json({ message: '删除分类失败' })
+  }
+})
+
+// 批量删除分类
+router.post('/categories/batch-delete', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ids } = req.body
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ message: '请提供要删除的分类ID列表' })
+      return
+    }
+
+    // 检查是否有商品使用了这些分类
+    const placeholders = ids.map(() => '?').join(',')
+    const [productsUsingCategories] = await pool.execute(
+      `SELECT COUNT(*) as count FROM products WHERE category_id IN (${placeholders})`,
+      ids,
+    )
+
+    if ((productsUsingCategories as CountResult[])[0].count > 0) {
+      res.status(400).json({
+        message: '所选分类中有分类包含商品，无法删除。请先移动相关商品。',
+      })
+      return
+    }
+
+    await pool.execute(`DELETE FROM categories WHERE id IN (${placeholders})`, ids)
+
+    res.json({ message: `成功删除 ${ids.length} 个分类` })
+  } catch (error) {
+    console.error('批量删除分类失败:', error)
+    res.status(500).json({ message: '批量删除分类失败' })
+  }
+})
+
+// 获取分类详情
+router.get('/categories/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    const [category] = await pool.execute('SELECT * FROM categories WHERE id = ?', [id])
+
+    if ((category as CategoryRow[]).length === 0) {
+      res.status(404).json({ message: '分类不存在' })
+      return
+    }
+
+    res.json((category as CategoryRow[])[0])
+  } catch (error) {
+    console.error('获取分类详情失败:', error)
+    res.status(500).json({ message: '获取分类详情失败' })
   }
 })
 
