@@ -114,7 +114,7 @@ export interface Product {
   brand?: string
   sku: string
   status: 'active' | 'inactive' | 'out_of_stock'
-  featured: boolean
+  featured: number
   image: string
   views?: number
   sales?: number
@@ -134,7 +134,7 @@ export interface ProductCreateData {
   brand?: string
   sku: string
   status?: 'active' | 'inactive'
-  featured?: boolean
+  featured?: number
   images?: string[]
   specifications?: Record<string, unknown>
 }

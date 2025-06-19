@@ -132,7 +132,7 @@ router.delete('/users/:id', async (req: Request, res: Response): Promise<void> =
 // 获取所有商品
 router.get('/products', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 20, search = '', category = '' } = req.query
+    const { page = 1, limit = 20, search = '', category_id = '' } = req.query
     const offset = (Number(page) - 1) * Number(limit)
 
     let query = `
@@ -149,9 +149,9 @@ router.get('/products', async (req: Request, res: Response): Promise<void> => {
       params.push(`%${search}%`)
     }
 
-    if (category) {
+    if (category_id) {
       conditions.push(`p.category_id = ?`)
-      params.push(category as string)
+      params.push(category_id as string)
     }
 
     if (conditions.length > 0) {
@@ -210,11 +210,34 @@ router.post('/products', async (req: Request, res: Response): Promise<void> => {
 router.put('/products/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const { name, description, price, category_id, stock, images } = req.body
+    const {
+      name,
+      description,
+      price,
+      original_price,
+      stock,
+      category_id,
+      brand,
+      sku,
+      featured,
+      image,
+    } = req.body
 
     await pool.execute(
-      'UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock = ?, images = ? WHERE id = ?',
-      [name, description, price, category_id, stock, JSON.stringify(images || []), id],
+      'UPDATE products SET name = ?, description = ?, price = ?, original_price = ?, stock = ?, category_id = ?, brand = ?, sku = ?, featured = ?, image = ? WHERE id = ?',
+      [
+        name,
+        description,
+        price,
+        original_price,
+        stock,
+        category_id,
+        brand,
+        sku,
+        featured,
+        image,
+        id,
+      ],
     )
 
     res.json({ message: '商品更新成功' })

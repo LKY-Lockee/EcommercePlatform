@@ -27,12 +27,13 @@
             v-model="selectedCategory"
             placeholder="选择分类"
             :options="categoryOptions"
+            value-by="value"
             clearable
             @update:modelValue="loadProducts"
           />
         </div>
       </div>
-      <va-button @click="showCreateDialog = true" icon="add"> 添加商品 </va-button>
+      <va-button @click="openCreateDialog" icon="add"> 添加商品 </va-button>
     </div>
 
     <!-- 商品列表 -->
@@ -94,22 +95,172 @@
     </div>
 
     <!-- 创建/编辑商品对话框 -->
-    <va-modal v-model="showCreateDialog" title="添加商品" @ok="handleCreateProduct">
-      <product-form
-        ref="productFormRef"
-        :product="currentProduct"
-        :categories="categories"
-        @submit="handleCreateProduct"
-      />
-    </va-modal>
+    <va-modal
+      v-model="showProductDialog"
+      :title="isEditing ? '编辑商品' : '添加商品'"
+      size="large"
+      max-width="900px"
+      hide-default-actions
+      class="product-modal"
+    >
+      <div class="product-form">
+        <va-form ref="productFormRef" @submit.prevent="handleFormSubmit">
+          <!-- 基本信息卡片 -->
+          <va-card class="form-card">
+            <va-card-title class="form-section-title">基本信息</va-card-title>
+            <va-card-content>
+              <div class="form-grid">
+                <div class="form-field">
+                  <va-input
+                    v-model="productForm.name"
+                    label="商品名称"
+                    placeholder="请输入商品名称"
+                    :rules="[required]"
+                    required
+                    clearable
+                  />
+                </div>
+                <div class="form-field">
+                  <va-select
+                    v-model="productForm.category_id"
+                    label="商品分类"
+                    placeholder="请选择商品分类"
+                    :options="formCategoryOptions"
+                    value-by="value"
+                    :rules="[required]"
+                    required
+                    clearable
+                  />
+                </div>
+              </div>
 
-    <va-modal v-model="showEditDialog" title="编辑商品" @ok="handleUpdateProduct">
-      <product-form
-        ref="productFormRef"
-        :product="currentProduct"
-        :categories="categories"
-        @submit="handleUpdateProduct"
-      />
+              <div class="form-grid">
+                <div class="form-field">
+                  <va-input
+                    v-model="productForm.sku"
+                    label="商品编码(SKU)"
+                    placeholder="请输入商品编码"
+                    clearable
+                  />
+                </div>
+                <div class="form-field">
+                  <va-input
+                    v-model="productForm.brand"
+                    label="品牌"
+                    placeholder="请输入品牌名称"
+                    clearable
+                  />
+                </div>
+              </div>
+
+              <div class="form-field-full">
+                <va-textarea
+                  v-model="productForm.description"
+                  label="商品描述"
+                  placeholder="请输入商品描述"
+                  rows="3"
+                  autosize
+                  clearable
+                />
+              </div>
+            </va-card-content>
+          </va-card>
+
+          <!-- 价格与库存卡片 -->
+          <va-card class="form-card">
+            <va-card-title class="form-section-title">价格与库存</va-card-title>
+            <va-card-content>
+              <div class="form-grid-three">
+                <div class="form-field">
+                  <va-input
+                    v-model.number="productForm.price"
+                    label="销售价格"
+                    type="number"
+                    placeholder="0.00"
+                    :rules="[required, minValue]"
+                    required
+                    step="0.01"
+                    min="0"
+                  >
+                    <template #prepend>
+                      <span class="currency-symbol">¥</span>
+                    </template>
+                  </va-input>
+                </div>
+                <div class="form-field">
+                  <va-input
+                    v-model.number="productForm.original_price"
+                    label="原价（划线价）"
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  >
+                    <template #prepend>
+                      <span class="currency-symbol">¥</span>
+                    </template>
+                  </va-input>
+                </div>
+                <div class="form-field">
+                  <va-input
+                    v-model.number="productForm.stock"
+                    label="库存数量"
+                    type="number"
+                    placeholder="0"
+                    :rules="[required, minStockValue]"
+                    required
+                    min="0"
+                  />
+                </div>
+              </div>
+            </va-card-content>
+          </va-card>
+
+          <!-- 商品图片与设置卡片 -->
+          <va-card class="form-card">
+            <va-card-title class="form-section-title">商品图片与设置</va-card-title>
+            <va-card-content>
+              <div class="form-grid-image">
+                <div class="form-field-image">
+                  <va-input
+                    v-model="productForm.image"
+                    label="商品主图"
+                    placeholder="请输入图片URL"
+                    clearable
+                  />
+                </div>
+                <div class="form-field-checkbox">
+                  <div class="checkbox-container">
+                    <va-checkbox
+                      v-model="productForm.featured"
+                      label="设为推荐商品"
+                      class="featured-checkbox"
+                    />
+                    <p class="checkbox-hint">推荐商品将在首页和推荐位置优先展示</p>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="productForm.image" class="image-preview">
+                <img :src="productForm.image" alt="商品预览" />
+              </div>
+            </va-card-content>
+          </va-card>
+
+          <!-- 表单操作按钮 -->
+          <div class="form-actions">
+            <va-button @click="cancelForm" preset="secondary" size="large"> 取消 </va-button>
+            <va-button
+              @click="handleFormSubmit"
+              color="primary"
+              size="large"
+              :loading="formSubmitting"
+            >
+              {{ isEditing ? '更新商品' : '创建商品' }}
+            </va-button>
+          </div>
+        </va-form>
+      </div>
     </va-modal>
   </div>
 </template>
@@ -119,17 +270,31 @@ import { ref, onMounted, computed } from 'vue'
 import { getAdminProducts, createProduct, updateProduct, deleteProduct } from '@/api/admin'
 import { getCategories } from '@/api/category'
 import type { AdminProduct, Category } from '@/types'
-import ProductForm from '@/components/admin/ProductForm.vue'
 
 const loading = ref(false)
 const products = ref<AdminProduct[]>([])
 const categories = ref<Category[]>([])
 const searchQuery = ref('')
 const selectedCategory = ref<number | undefined>(undefined)
-const showCreateDialog = ref(false)
-const showEditDialog = ref(false)
-const currentProduct = ref<Partial<AdminProduct>>({})
+const showProductDialog = ref(false)
+const isEditing = ref(false)
+const formSubmitting = ref(false)
 const productFormRef = ref()
+
+// 统一的商品表单数据（前端使用布尔值便于操作）
+const productForm = ref({
+  name: '',
+  description: '',
+  price: 0,
+  original_price: 0,
+  stock: 0,
+  category_id: undefined as number | undefined,
+  brand: '',
+  sku: '',
+  featured: false,
+  image: '',
+  id: undefined as number | undefined,
+})
 
 const pagination = ref({
   page: 1,
@@ -149,20 +314,45 @@ const columns = [
 ]
 
 const categoryOptions = computed(() => [
-  { text: '全部分类', value: '' },
-  ...categories.value.map((cat) => ({ text: cat.name, value: cat.id.toString() })),
+  { text: '全部分类', value: undefined },
+  ...categories.value.map((cat) => ({ text: cat.name, value: cat.id })),
 ])
+
+const formCategoryOptions = computed(() =>
+  categories.value.map((cat) => ({ text: cat.name, value: cat.id })),
+)
+
+// 表单验证规则
+const required = (value: unknown) => !!value || '此字段为必填项'
+const minValue = (value: string | number) => {
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  return num >= 0 || '值不能小于0'
+}
+const minStockValue = (value: string | number) => {
+  const num = typeof value === 'string' ? parseInt(value) : value
+  return num >= 0 || '库存数量不能小于0'
+}
 
 const loadProducts = async () => {
   try {
     loading.value = true
-    const response = await getAdminProducts({
+    const params: {
+      page: number
+      limit: number
+      search: string
+      category_id?: number
+    } = {
       page: pagination.value.page,
       limit: pagination.value.perPage,
       search: searchQuery.value,
-      category_id: selectedCategory.value,
-    })
-    console.log(response.data)
+    }
+
+    // 只有当 selectedCategory 有值且不是 undefined 时才添加 category_id
+    if (selectedCategory.value !== undefined && selectedCategory.value !== null) {
+      params.category_id = selectedCategory.value
+    }
+
+    const response = await getAdminProducts(params)
     const responseData = response.data
     if (responseData) {
       products.value = responseData.items || []
@@ -205,36 +395,105 @@ const updatePagination = (newPagination: Partial<typeof pagination.value>) => {
 }
 
 const editProduct = (product: AdminProduct) => {
-  currentProduct.value = { ...product }
-  showEditDialog.value = true
+  productForm.value = {
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    original_price: product.original_price || 0,
+    stock: product.stock,
+    category_id: product.category_id,
+    brand: product.brand || '',
+    sku: product.sku,
+    featured: Boolean(product.featured), // 数字转布尔值
+    image: product.image || '',
+    id: product.id,
+  }
+  isEditing.value = true
+  showProductDialog.value = true
 }
 
-const handleCreateProduct = async () => {
-  try {
-    const formData = await productFormRef.value?.validate()
-    if (formData) {
-      await createProduct(formData)
-      showCreateDialog.value = false
-      loadProducts()
-      currentProduct.value = {}
-    }
-  } catch (error) {
-    console.error('创建商品失败:', error)
+// 打开创建对话框
+const openCreateDialog = () => {
+  resetProductForm()
+  isEditing.value = false
+  showProductDialog.value = true
+}
+
+// 重置商品表单
+const resetProductForm = () => {
+  productForm.value = {
+    name: '',
+    description: '',
+    price: 0,
+    original_price: 0,
+    stock: 0,
+    category_id: undefined,
+    brand: '',
+    sku: '',
+    featured: false,
+    image: '',
+    id: undefined,
   }
 }
 
-const handleUpdateProduct = async () => {
+// 统一的表单提交处理
+const handleFormSubmit = async () => {
   try {
-    const formData = await productFormRef.value?.validate()
-    if (formData && currentProduct.value.id) {
-      await updateProduct(currentProduct.value.id, formData)
-      showEditDialog.value = false
+    const isValid = await productFormRef.value?.validate()
+    if (isValid) {
+      formSubmitting.value = true
+
+      if (isEditing.value) {
+        // 编辑商品
+        if (productForm.value.id) {
+          const updateData = {
+            name: productForm.value.name,
+            description: productForm.value.description,
+            price: productForm.value.price,
+            original_price: productForm.value.original_price,
+            stock: productForm.value.stock,
+            category_id: productForm.value.category_id,
+            brand: productForm.value.brand,
+            sku: productForm.value.sku,
+            featured: productForm.value.featured ? 1 : 0, // 布尔值转数字
+            image: productForm.value.image || '',
+          }
+
+          await updateProduct(productForm.value.id, updateData)
+        }
+      } else {
+        // 创建商品
+        const createData = {
+          name: productForm.value.name || '',
+          description: productForm.value.description || '',
+          price: productForm.value.price || 0,
+          original_price: productForm.value.original_price,
+          stock: productForm.value.stock || 0,
+          category_id: productForm.value.category_id || 0,
+          brand: productForm.value.brand,
+          sku: productForm.value.sku || '',
+          featured: productForm.value.featured ? 1 : 0, // 布尔值转数字
+          image: productForm.value.image || '',
+        }
+
+        await createProduct(createData)
+      }
+
+      showProductDialog.value = false
+      resetProductForm()
       loadProducts()
-      currentProduct.value = {}
     }
   } catch (error) {
-    console.error('更新商品失败:', error)
+    console.error(isEditing.value ? '更新商品失败:' : '创建商品失败:', error)
+  } finally {
+    formSubmitting.value = false
   }
+}
+
+// 取消表单
+const cancelForm = () => {
+  showProductDialog.value = false
+  resetProductForm()
 }
 
 const deleteProductConfirm = (product: AdminProduct) => {
@@ -305,7 +564,7 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.filter-section{
+.filter-section {
   display: flex;
   gap: 1rem;
 }
@@ -410,6 +669,189 @@ onMounted(() => {
   color: #d97706;
 }
 
+/* 商品表单样式 */
+.product-modal :deep(.va-modal__title) {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.product-form {
+  padding: 0 4px;
+}
+
+/* CSS Grid 布局 */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+
+  &:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+}
+
+.form-grid-three {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+
+  &:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+}
+
+.form-grid-image {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field-full:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.form-field-image {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field-checkbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .form-grid,
+  .form-grid-three,
+  .form-grid-image {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.form-card {
+  margin-bottom: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-section-title {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.form-card :deep(.va-card__title) {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+}
+
+.form-card :deep(.va-card__content) {
+  padding: 1.75rem 1.5rem;
+}
+
+.currency-symbol {
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.checkbox-container {
+  padding-top: 0.5rem;
+}
+
+.featured-checkbox {
+  margin-bottom: 0.75rem;
+}
+
+.featured-checkbox :deep(.va-checkbox__label) {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.checkbox-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 0 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+}
+
+.form-actions .va-button {
+  min-width: 120px;
+  height: 44px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* 表单输入框样式增强 */
+.product-form :deep(.va-input__container) {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.product-form :deep(.va-input__container):hover {
+  border-color: var(--va-primary);
+}
+
+.product-form :deep(.va-input__container--focused) {
+  border-color: var(--va-primary);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.1);
+}
+
+.product-form :deep(.va-select__anchor) {
+  border-radius: 8px;
+  min-height: 44px;
+}
+
+.product-form :deep(.va-textarea__container) {
+  border-radius: 8px;
+}
+
+.product-form :deep(.va-input) {
+  margin-bottom: 0;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
   .filter-row {
     grid-template-columns: 1fr;
@@ -423,10 +865,51 @@ onMounted(() => {
 
   .header-section {
     padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-section {
+    flex-direction: column;
   }
 
   .products-table {
     padding: 1rem;
   }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .va-button {
+    width: 100%;
+  }
+
+  .product-form {
+    max-height: 60vh;
+  }
+
+  .form-card :deep(.va-card__content) {
+    padding: 1rem;
+  }
+}
+
+/* 滚动条样式 */
+.product-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.product-form::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.product-form::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.product-form::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 </style>
