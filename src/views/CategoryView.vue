@@ -207,9 +207,16 @@ const loadCategory = async () => {
 
   try {
     const response = await getCategoryDetail(parseInt(categoryId))
-    categoryName.value = response.data.data.name
+    const categoryData = response.data
+    if (categoryData && categoryData.name) {
+      categoryName.value = categoryData.name
+    } else {
+      console.warn('分类数据格式不正确:', categoryData)
+      categoryName.value = '未知分类'
+    }
   } catch (error) {
     console.error('加载分类信息失败:', error)
+    categoryName.value = '加载失败'
   }
 }
 
@@ -248,14 +255,23 @@ const loadProducts = async () => {
     }
 
     const response = await getProducts(params)
-    products.value = response.data.data.items
+    const responseData = response.data
 
-    // 设置分页信息
-    if (response.data.data.total) {
-      totalProducts.value = response.data.data.total
-      totalPages.value = response.data.data.totalPages
+    if (responseData && responseData.items) {
+      products.value = responseData.items
+
+      // 设置分页信息
+      if (responseData.pagination.total) {
+        totalProducts.value = responseData.pagination.total
+        totalPages.value = responseData.pagination.total_pages
+      } else {
+        totalProducts.value = responseData.items.length || 0
+        totalPages.value = 1
+      }
     } else {
-      totalProducts.value = response.data.data.items?.length || 0
+      console.warn('商品数据格式不正确:', responseData)
+      products.value = []
+      totalProducts.value = 0
       totalPages.value = 1
     }
   } catch (error) {

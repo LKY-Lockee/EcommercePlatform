@@ -129,7 +129,7 @@ router.delete('/users/:id', async (req: Request, res: Response): Promise<void> =
   }
 })
 
-// 获取所有商品（管理员）
+// 获取所有商品
 router.get('/products', async (req: Request, res: Response): Promise<void> => {
   try {
     const { page = 1, limit = 20, search = '', category = '' } = req.query
@@ -139,35 +139,35 @@ router.get('/products', async (req: Request, res: Response): Promise<void> => {
       SELECT p.*, c.name as category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-    `
+      `
     let countQuery = 'SELECT COUNT(*) as total FROM products p'
     const conditions: string[] = []
     const params: (string | number)[] = []
 
     if (search) {
-      conditions.push('p.name LIKE ?')
+      conditions.push(`p.name LIKE ?`)
       params.push(`%${search}%`)
     }
 
     if (category) {
-      conditions.push('p.category_id = ?')
+      conditions.push(`p.category_id = ?`)
       params.push(category as string)
     }
 
     if (conditions.length > 0) {
-      const whereClause = ' WHERE ' + conditions.join(' AND ')
+      const whereClause = ` WHERE ` + conditions.join(` AND `)
       query += whereClause
       countQuery += whereClause
     }
 
-    query += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?'
-    params.push(Number(limit), offset)
+    query += ` ORDER BY p.created_at DESC LIMIT ? OFFSET ?`
+    params.push(String(limit), String(offset))
 
-    const [products] = await pool.execute(query, params)
+    const [items] = await pool.execute(query, params)
     const [countResult] = await pool.execute(countQuery, params.slice(0, -2))
 
     res.json({
-      products,
+      items,
       pagination: {
         current: Number(page),
         total: Math.ceil((countResult as TotalResult[])[0].total / Number(limit)),

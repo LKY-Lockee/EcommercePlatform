@@ -162,7 +162,7 @@ const loadOrder = async () => {
   try {
     const orderId = parseInt(route.params.id as string)
     const response = await getOrderDetail(orderId)
-    order.value = response.data.data
+    order.value = response.data
   } catch (error) {
     console.error('加载订单失败:', error)
     router.push('/user/orders')
@@ -176,7 +176,7 @@ const handlePay = async () => {
     paying.value = true
     await new Promise((resolve) => setTimeout(resolve, 2000))
     await payOrder(order.value.id)
-    await cartStore.fetchCart()
+    await cartStore.getCart()
     showSuccessDialog.value = true
   } catch (error) {
     console.error('支付失败:', error)

@@ -232,7 +232,7 @@ const handleLogout = () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories()
-    categories.value = response.data.data
+    categories.value = response.data
   } catch (error) {
     console.error('加载分类失败:', error)
   }

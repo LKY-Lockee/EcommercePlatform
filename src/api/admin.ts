@@ -13,40 +13,39 @@ import type {
   Banner,
   BannerCreateData,
   PaginationResponse,
-  ApiResponse,
 } from '@/types'
 
 // ===== 管理员统计数据 =====
 
 // 获取仪表盘统计数据
 export const getDashboardStats = () =>
-  request.get<ApiResponse<AdminStats>>('/admin/dashboard/stats')
+  request.get<AdminStats>('/admin/dashboard')
 
 // ===== 用户管理 =====
 
 // 获取用户列表
 export const getAdminUsers = (params?: AdminUserListParams) =>
-  request.get<ApiResponse<PaginationResponse<AdminUser>>>('/admin/users', { params })
+  request.get<PaginationResponse<AdminUser>>('/admin/users', { params })
 
 // 获取用户详情
 export const getAdminUserDetail = (id: number) =>
-  request.get<ApiResponse<AdminUser>>(`/admin/users/${id}`)
+  request.get<AdminUser>(`/admin/users/${id}`)
 
 // 更新用户信息
 export const updateAdminUser = (id: number, data: Partial<AdminUser>) =>
-  request.put<ApiResponse<AdminUser>>(`/admin/users/${id}`, data)
+  request.put<AdminUser>(`/admin/users/${id}`, data)
 
 // 删除用户
 export const deleteUser = (id: number) =>
-  request.delete<ApiResponse<{ message: string }>>(`/admin/users/${id}`)
+  request.delete<{ message: string }>(`/admin/users/${id}`)
 
 // 批量删除用户
 export const deleteUsers = (ids: number[]) =>
-  request.post<ApiResponse<{ message: string }>>('/admin/users/batch-delete', { ids })
+  request.post<{ message: string }>('/admin/users/batch-delete', { ids })
 
 // 重置用户密码
 export const resetUserPassword = (id: number) =>
-  request.put<ApiResponse<{ message: string; password: string }>>(
+  request.put<{ message: string; password: string }>(
     `/admin/users/${id}/reset-password`,
   )
 
@@ -54,33 +53,33 @@ export const resetUserPassword = (id: number) =>
 
 // 获取商品列表
 export const getAdminProducts = (params?: AdminProductListParams) =>
-  request.get<ApiResponse<PaginationResponse<AdminProduct>>>('/admin/products', { params })
+  request.get<PaginationResponse<AdminProduct>>('/admin/products', { params })
 
 // 获取商品详情
 export const getAdminProductDetail = (id: number) =>
-  request.get<ApiResponse<AdminProduct>>(`/admin/products/${id}`)
+  request.get<AdminProduct>(`/admin/products/${id}`)
 
 // 创建商品
 export const createProduct = (data: ProductCreateData) =>
-  request.post<ApiResponse<AdminProduct>>('/admin/products', data)
+  request.post<AdminProduct>('/admin/products', data)
 
 // 更新商品
 export const updateProduct = (id: number, data: Partial<ProductCreateData>) =>
-  request.put<ApiResponse<AdminProduct>>(`/admin/products/${id}`, data)
+  request.put<AdminProduct>(`/admin/products/${id}`, data)
 
 // 删除商品
 export const deleteProduct = (id: number) =>
-  request.delete<ApiResponse<{ message: string }>>(`/admin/products/${id}`)
+  request.delete<{ message: string }>(`/admin/products/${id}`)
 
 // 批量删除商品
 export const deleteProducts = (ids: number[]) =>
-  request.post<ApiResponse<{ message: string }>>('/admin/products/batch-delete', { ids })
+  request.post<{ message: string }>('/admin/products/batch-delete', { ids })
 
 // 上传商品图片
 export const uploadProductImage = (file: File) => {
   const formData = new FormData()
   formData.append('image', file)
-  return request.post<ApiResponse<{ url: string }>>('/admin/products/upload-image', formData, {
+  return request.post<{ url: string }>('/admin/products/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
@@ -89,38 +88,38 @@ export const uploadProductImage = (file: File) => {
 
 // 获取订单列表
 export const getAdminOrders = (params?: AdminOrderListParams) =>
-  request.get<ApiResponse<PaginationResponse<AdminOrder>>>('/admin/orders', { params })
+  request.get<PaginationResponse<AdminOrder>>('/admin/orders', { params })
 
 // 获取订单详情
 export const getAdminOrderDetail = (id: number) =>
-  request.get<ApiResponse<AdminOrder>>(`/admin/orders/${id}`)
+  request.get<AdminOrder>(`/admin/orders/${id}`)
 
 // ===== 分类管理 =====
 
 // 获取所有分类
-export const getAdminCategories = () => request.get<ApiResponse<Category[]>>('/admin/categories')
+export const getAdminCategories = () => request.get<Category[]>('/admin/categories')
 
 // 创建分类
 export const createCategory = (data: CategoryCreateData) =>
-  request.post<ApiResponse<Category>>('/admin/categories', data)
+  request.post<Category>('/admin/categories', data)
 
 // 更新分类
 export const updateCategory = (id: number, data: Partial<CategoryCreateData>) =>
-  request.put<ApiResponse<Category>>(`/admin/categories/${id}`, data)
+  request.put<Category>(`/admin/categories/${id}`, data)
 
 // 删除分类
 export const deleteCategory = (id: number) =>
-  request.delete<ApiResponse<{ message: string }>>(`/admin/categories/${id}`)
+  request.delete<{ message: string }>(`/admin/categories/${id}`)
 
 // 批量删除分类
 export const deleteCategories = (ids: number[]) =>
-  request.post<ApiResponse<{ message: string }>>('/admin/categories/batch-delete', { ids })
+  request.post<{ message: string }>('/admin/categories/batch-delete', { ids })
 
 // 上传分类图片
 export const uploadCategoryImage = (file: File) => {
   const formData = new FormData()
   formData.append('image', file)
-  return request.post<ApiResponse<{ url: string }>>('/admin/categories/upload-image', formData, {
+  return request.post<{ url: string }>('/admin/categories/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
@@ -128,29 +127,29 @@ export const uploadCategoryImage = (file: File) => {
 // ===== 横幅管理 =====
 
 // 获取所有横幅
-export const getAdminBanners = () => request.get<ApiResponse<Banner[]>>('/admin/banners')
+export const getAdminBanners = () => request.get<Banner[]>('/admin/banners')
 
 // 创建横幅
 export const createBanner = (data: BannerCreateData) =>
-  request.post<ApiResponse<Banner>>('/admin/banners', data)
+  request.post<Banner>('/admin/banners', data)
 
 // 更新横幅
 export const updateBanner = (id: number, data: Partial<BannerCreateData>) =>
-  request.put<ApiResponse<Banner>>(`/admin/banners/${id}`, data)
+  request.put<Banner>(`/admin/banners/${id}`, data)
 
 // 删除横幅
 export const deleteBanner = (id: number) =>
-  request.delete<ApiResponse<{ message: string }>>(`/admin/banners/${id}`)
+  request.delete<{ message: string }>(`/admin/banners/${id}`)
 
 // 批量删除横幅
 export const deleteBanners = (ids: number[]) =>
-  request.post<ApiResponse<{ message: string }>>('/admin/banners/batch-delete', { ids })
+  request.post<{ message: string }>('/admin/banners/batch-delete', { ids })
 
 // 上传横幅图片
 export const uploadBannerImage = (file: File) => {
   const formData = new FormData()
   formData.append('image', file)
-  return request.post<ApiResponse<{ url: string }>>('/admin/banners/upload-image', formData, {
+  return request.post<{ url: string }>('/admin/banners/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
@@ -159,8 +158,8 @@ export const uploadBannerImage = (file: File) => {
 
 // 获取系统设置
 export const getSystemSettings = () =>
-  request.get<ApiResponse<Record<string, unknown>>>('/admin/settings')
+  request.get<Record<string, unknown>>('/admin/settings')
 
 // 更新系统设置
 export const updateSystemSettings = (data: Record<string, unknown>) =>
-  request.put<ApiResponse<{ message: string }>>('/admin/settings', data)
+  request.put<{ message: string }>('/admin/settings', data)

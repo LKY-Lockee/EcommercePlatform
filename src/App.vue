@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts" name="App">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
@@ -22,15 +22,10 @@ const cartStore = useCartStore()
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
-onMounted(async () => {
-  await userStore.initUser()
+onBeforeMount(async () => {
+  userStore.initUser()
   if (userStore.isLoggedIn) {
-    // 先同步本地购物车到服务端
-    await cartStore.syncLocalCartToServer()
-    // 然后获取服务端购物车
-    await cartStore.fetchCart()
-  } else {
-    cartStore.loadFromLocalStorage()
+    await cartStore.getCart()
   }
 })
 </script>

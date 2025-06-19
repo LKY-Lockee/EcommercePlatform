@@ -105,10 +105,10 @@
           <span class="order-total">¥{{ rowData.total_amount.toFixed(2) }}</span>
         </template>
 
-        <template #cell(actions)="{ rowData }">
+        <template #cell(actions)="">
           <div class="action-buttons">
-            <va-button preset="plain" size="small" icon="visibility" @click="viewOrder(rowData)" />
-            <va-button preset="plain" size="small" icon="edit" @click="editOrder(rowData)" />
+            <va-button preset="plain" size="small" icon="visibility" @click="viewOrder()" />
+            <va-button preset="plain" size="small" icon="edit" @click="editOrder()" />
           </div>
         </template>
       </va-data-table>
@@ -168,30 +168,44 @@ const loadOrders = async () => {
       search: searchQuery.value,
       status: statusFilter.value || undefined,
     })
-    orders.value = response.data.data.items
+    const responseData = response.data
+    if (responseData && responseData.items) {
+      orders.value = responseData.items
 
-    // 计算统计信息
-    stats.value = {
-      total: response.data.data.total,
-      completed: orders.value.filter((o) => o.status === 'delivered').length,
-      pending: orders.value.filter((o) => o.status === 'pending').length,
-      cancelled: orders.value.filter((o) => o.status === 'cancelled').length,
+      // 计算统计信息
+      stats.value = {
+        total: responseData.pagination.total || 0,
+        completed: orders.value.filter((o) => o.status === 'delivered').length,
+        pending: orders.value.filter((o) => o.status === 'pending').length,
+        cancelled: orders.value.filter((o) => o.status === 'cancelled').length,
+      }
+    } else {
+      orders.value = []
+      stats.value = {
+        total: 0,
+        completed: 0,
+        pending: 0,
+        cancelled: 0,
+      }
     }
   } catch (error) {
     console.error('加载订单失败:', error)
+    orders.value = []
+    stats.value = {
+      total: 0,
+      completed: 0,
+      pending: 0,
+      cancelled: 0,
+    }
   } finally {
     loading.value = false
   }
 }
 
-const viewOrder = (order: AdminOrder) => {
-  console.log('查看订单:', order)
-  // TODO: 实现订单详情查看
+const viewOrder = () => {
 }
 
-const editOrder = async (order: AdminOrder) => {
-  console.log('编辑订单:', order)
-  // TODO: 实现订单状态更新
+const editOrder = async () => {
 }
 
 const getStatusText = (status: OrderStatus) => {

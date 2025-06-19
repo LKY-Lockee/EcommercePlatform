@@ -1,22 +1,24 @@
 <template>
   <div class="admin-products">
-    <div class="page-header">
-      <h2 class="page-title">商品管理</h2>
-      <va-button @click="showCreateDialog = true" icon="add"> 添加商品 </va-button>
-    </div>
-
     <!-- 搜索和筛选 -->
-    <div class="filter-section">
-      <div class="filter-row">
+    <div class="header-section">
+      <div class="filter-section">
         <div class="filter-item">
           <va-input
             v-model="searchQuery"
             placeholder="搜索商品名称"
             clearable
             @input="handleSearch"
+            class="search-input"
           >
-            <template #prepend>
-              <va-icon name="search" />
+            <template #appendInner>
+              <va-button
+                preset="plain"
+                @click="handleSearch"
+                icon="search"
+                size="small"
+                color="primary"
+              />
             </template>
           </va-input>
         </div>
@@ -30,6 +32,7 @@
           />
         </div>
       </div>
+      <va-button @click="showCreateDialog = true" icon="add"> 添加商品 </va-button>
     </div>
 
     <!-- 商品列表 -->
@@ -44,7 +47,7 @@
         class="data-table"
       >
         <template #cell(image_url)="{ rowData }">
-          <va-avatar :src="getProductImage(rowData) || '/placeholder.png'" size="medium" square />
+          <va-avatar :src="rowData.image" size="medium" square />
         </template>
 
         <template #cell(price)="{ rowData }">
@@ -159,8 +162,15 @@ const loadProducts = async () => {
       search: searchQuery.value,
       category_id: selectedCategory.value,
     })
-    products.value = response.data.data.items || []
-    pagination.value.total = response.data.data.total
+    console.log(response.data)
+    const responseData = response.data
+    if (responseData) {
+      products.value = responseData.items || []
+      pagination.value.total = responseData.pagination.total || 0
+    } else {
+      products.value = []
+      pagination.value.total = 0
+    }
   } catch (error) {
     console.error('加载商品失败:', error)
   } finally {
@@ -171,9 +181,16 @@ const loadProducts = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories()
-    categories.value = response.data.data
+    const categoriesData = response.data
+    if (Array.isArray(categoriesData)) {
+      categories.value = categoriesData
+    } else {
+      console.warn('分类数据格式不正确:', categoriesData)
+      categories.value = []
+    }
   } catch (error) {
     console.error('加载分类失败:', error)
+    categories.value = []
   }
 }
 
@@ -251,20 +268,6 @@ const getStatusText = (status: string) => {
   return texts[status] || status
 }
 
-// 获取产品图片
-const getProductImage = (product: AdminProduct): string | undefined => {
-  if (!product.images || product.images.length === 0) {
-    return product.primary_image
-  }
-
-  const firstImage = product.images[0]
-  if (typeof firstImage === 'string') {
-    return firstImage
-  } else {
-    return firstImage.image_url
-  }
-}
-
 onMounted(() => {
   loadProducts()
   loadCategories()
@@ -291,7 +294,9 @@ onMounted(() => {
   color: var(--va-text-primary);
 }
 
-.filter-section {
+.header-section {
+  display: flex;
+  justify-content: space-between;
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
@@ -300,15 +305,36 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.filter-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.filter-section{
+  display: flex;
   gap: 1rem;
-  align-items: end;
 }
 
 .filter-item {
   min-width: 0;
+}
+
+.search-input {
+  width: 100%;
+  border-radius: 25px;
+}
+
+.search-input :deep(.va-input__container) {
+  border-radius: 25px;
+  background: rgba(var(--va-background-secondary-rgb), 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  padding-right: 40px;
+}
+
+.search-input :deep(.va-input__container):hover {
+  border-color: var(--va-primary);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.1);
+}
+
+.search-input :deep(.va-input__container--focused) {
+  border-color: var(--va-primary);
+  box-shadow: 0 0 0 3px rgba(var(--va-primary-rgb), 0.15);
 }
 
 .products-table {
@@ -395,7 +421,7 @@ onMounted(() => {
     align-items: stretch;
   }
 
-  .filter-section {
+  .header-section {
     padding: 1rem;
   }
 

@@ -20,7 +20,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   }
   jwt.verify(
     token,
-    process.env.JWT_SECRET || 'your-secret-key',
+    process.env.JWT_SECRET || '',
     (err: jwt.VerifyErrors | null, decoded: string | jwt.JwtPayload | undefined) => {
       if (err) {
         res.status(403).json({ message: '无效的令牌' })

@@ -37,7 +37,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     // 生成JWT token
     const token = jwt.sign(
       { id: userId, username, email, role: 'user' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || '',
       { expiresIn: '24h' },
     )
 
@@ -86,7 +86,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     // 生成JWT token
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || '',
       { expiresIn: '24h' },
     )
 

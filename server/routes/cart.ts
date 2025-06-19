@@ -11,18 +11,9 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const connection = await getConnection()
     const [rows] = await connection.execute(
       `
-      SELECT
-        c.id,
-        c.product_id,
-        c.quantity,
-        p.name,
-        p.price,
-        p.stock,
-        (c.quantity * p.price) as total_price,
-        pi.image_url
+      SELECT *
       FROM cart c
       JOIN products p ON c.product_id = p.id
-      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE c.user_id = ?
     `,
       [req.user!.id],
@@ -37,7 +28,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 })
 
 // 添加到购物车
-router.post('/add', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { product_id, quantity = 1 } = req.body
 
@@ -154,7 +145,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     const { id } = req.params
     const connection = await getConnection()
 
-    const result = await connection.execute('DELETE FROM cart WHERE id = ? AND user_id = ?', [
+    const result = await connection.execute('DELETE FROM cart WHERE product_id = ? AND user_id = ?', [
       id,
       req.user!.id,
     ])

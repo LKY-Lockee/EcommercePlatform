@@ -15,13 +15,13 @@
           <div class="banner-slide" :style="{ backgroundImage: `url(${item.image_url})` }">
             <div class="banner-content">
               <h1 class="banner-title">{{ item.title }}</h1>
-              <p class="banner-subtitle">{{ item.subtitle }}</p>
+              <p class="banner-subtitle">{{ item.subtitle || '' }}</p>
               <va-button
                 size="large"
                 color="primary"
-                @click="$router.push(item.link_url || '/products')"
+                @click="$router.push(item.link || '/products')"
               >
-                {{ item.button_text }}
+                查看详情
               </va-button>
             </div>
           </div>
@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getCategories } from '@/api/category'
-import { getFeaturedProducts } from '@/api/product'
+import { getProducts } from '@/api/product'
 import { getBanners } from '@/api/banner'
 import type { Category, Product, Banner } from '@/types'
 import ProductCard from '@/components/ProductCard.vue'
@@ -136,26 +136,19 @@ const categories = ref<Category[]>([])
 const featuredProducts = ref<Product[]>([])
 const bannerItems = ref<Banner[]>([])
 
-// 默认轮播图数据
-const defaultBanner: Banner = {
-  id: 1,
-  title: '夏季大促销',
-  subtitle: '精选商品 5折起',
-  image: 'https://via.placeholder.com/1200x400/4f46e5/ffffff?text=夏季大促销',
-  link: '/products',
-  sort_order: 1,
-  is_active: true,
-  created_at: new Date().toISOString(),
-}
-
 // 加载轮播图数据
 const loadBanners = async () => {
   try {
     const response = await getBanners()
-    bannerItems.value = response.data.data
+    const bannersData = response.data
+    if (Array.isArray(bannersData)) {
+      bannerItems.value = bannersData
+    } else {
+      bannerItems.value = []
+    }
   } catch (error) {
     console.error('加载轮播图失败:', error)
-    bannerItems.value = [defaultBanner]
+    bannerItems.value = []
   }
 }
 
@@ -163,19 +156,37 @@ const loadBanners = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories()
-    categories.value = response.data.data.slice(0, 8)
+    const categoriesData = response.data
+    if (Array.isArray(categoriesData)) {
+      categories.value = categoriesData.slice(0, 8)
+    } else {
+      categories.value = []
+    }
   } catch (error) {
     console.error('加载分类失败:', error)
+    categories.value = []
   }
 }
 
 // 加载推荐商品
 const loadFeaturedProducts = async () => {
   try {
-    const response = await getFeaturedProducts()
-    featuredProducts.value = response.data.data.slice(0, 8)
+    const response = await getProducts({
+      featured: true,
+      limit: 8,
+      sort_by: 'rating',
+      sort_order: 'desc',
+    })
+
+    const responseData = response.data.items
+    if (responseData && Array.isArray(responseData)) {
+      featuredProducts.value = responseData
+    } else {
+      featuredProducts.value = []
+    }
   } catch (error) {
     console.error('加载推荐商品失败:', error)
+    featuredProducts.value = []
   }
 }
 

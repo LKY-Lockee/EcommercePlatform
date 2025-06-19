@@ -96,20 +96,14 @@ router.post(
           ])
         }
 
-        // 不要在创建订单时清空购物车，等支付成功后再清空
-        // await connection.execute('DELETE FROM cart WHERE user_id = ?', [req.user!.id])
-
         await connection.commit()
         connection.release()
 
         res.status(201).json({
-          message: '订单创建成功',
-          order: {
             id: orderId,
             order_number,
             total_amount,
             status: 'pending',
-          },
         })
       } catch (error) {
         await connection.rollback()
@@ -129,15 +123,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     // 获取订单基本信息
     const [orderRows] = await pool.execute(
       `
-      SELECT
-        id,
-        order_number,
-        status,
-        total_amount,
-        shipping_address,
-        payment_method,
-        payment_status,
-        created_at
+      SELECT *
       FROM orders
       WHERE user_id = ?
       ORDER BY created_at DESC

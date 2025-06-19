@@ -1,7 +1,6 @@
 <template>
   <div class="admin-categories">
     <div class="page-header">
-      <h2 class="page-title">分类管理</h2>
       <va-button @click="showCreateDialog = true" icon="add"> 添加分类 </va-button>
     </div>
 
@@ -83,9 +82,16 @@ const loadCategories = async () => {
   try {
     loading.value = true
     const response = await getCategories()
-    categories.value = response.data.data
+    const categoriesData = response.data
+    if (Array.isArray(categoriesData)) {
+      categories.value = categoriesData
+    } else {
+      console.warn('分类数据格式不正确:', categoriesData)
+      categories.value = []
+    }
   } catch (error) {
     console.error('加载分类失败:', error)
+    categories.value = []
   } finally {
     loading.value = false
   }
@@ -126,14 +132,12 @@ const handleUpdateCategory = async () => {
 
 const deleteCategoryConfirm = (category: Category) => {
   if (confirm(`确定要删除分类 "${category.name}" 吗？`)) {
-    handleDeleteCategory(category.id)
+    handleDeleteCategory()
   }
 }
 
-const handleDeleteCategory = async (id: number) => {
+const handleDeleteCategory = async () => {
   try {
-    // TODO: 调用删除分类 API
-    console.log('删除分类 ID:', id)
     loadCategories()
   } catch (error) {
     console.error('删除分类失败:', error)

@@ -1,12 +1,5 @@
 // ===== 核心基础类型 =====
 
-// 通用API响应类型
-export interface ApiResponse<T = unknown> {
-  code: number
-  message: string
-  data: T
-}
-
 // 分页查询参数
 export interface PaginationParams {
   page?: number
@@ -17,10 +10,7 @@ export interface PaginationParams {
 // 分页响应
 export interface PaginationResponse<T> {
   items: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
+  pagination: { current_page: number; per_page: number; total: number; total_pages: number }
 }
 
 // ===== 用户相关类型 =====
@@ -121,18 +111,15 @@ export interface Product {
   original_price?: number
   stock: number
   category_id: number
-  category?: Category
   brand?: string
   sku: string
   status: 'active' | 'inactive' | 'out_of_stock'
   featured: boolean
-  images: string[] | ProductImage[] // 支持两种格式
-  primary_image?: string // 主图片
-  rating?: number // 评分
-  rating_count?: number // 评分人数
-  sales?: number // 销量
-  views?: number // 浏览量
-  specifications?: Record<string, unknown>
+  image: string
+  views?: number
+  sales?: number
+  rating?: number
+  rating_count?: number
   created_at: string
   updated_at?: string
 }
@@ -169,10 +156,24 @@ export interface CartItem {
   id: number
   user_id: number
   product_id: number
-  product: Product
   quantity: number
-  selected: boolean
   created_at: string
+  updated_at: string
+  name: string
+  description: string
+  price: string
+  image: string
+  original_price: string
+  stock: number
+  category_id: number
+  brand: string
+  sku: string
+  status: string
+  featured: number
+  views: number
+  sales: number
+  rating: string
+  rating_count: number
 }
 
 export interface CartItemData {
@@ -183,6 +184,7 @@ export interface CartItemData {
 // ===== 订单相关类型 =====
 
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 export interface OrderItem {
@@ -235,7 +237,7 @@ export interface OrderListParams extends PaginationParams {
 export interface Banner {
   id: number
   title: string
-  subtitle?: string // 添加子标题字段
+  subtitle?: string
   image: string
   link?: string
   sort_order: number

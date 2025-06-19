@@ -39,7 +39,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     if (featured === 'true') {
       whereClause += ' AND p.featured = ?'
-      queryParams.push(1) // 使用数字而不是布尔值
+      queryParams.push(1)
     }
 
     // 价格筛选
@@ -53,7 +53,6 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       queryParams.push(Number(max_price))
     }
 
-    // 验证排序参数
     const validSortBy = ['price', 'sales', 'rating', 'created_at']
     const validSortOrder = ['ASC', 'DESC']
     const safeSortBy = validSortBy.includes(String(sort_by)) ? String(sort_by) : 'created_at'
@@ -96,8 +95,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         p.rating,
         p.rating_count,
         p.created_at,
-        c.name as category_name,
-        (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.is_primary = 1 LIMIT 1) as primary_image
+        p.image,
+        c.name as category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       ${whereClause}
@@ -105,8 +104,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       LIMIT ${limitNum} OFFSET ${offset}
     `
 
-    console.log('执行查询，参数:', queryParams)
-    const [products] = await pool.execute(query, queryParams)
+    const [items] = await pool.execute(query, queryParams)
 
     // 获取总数
     const countQuery = `
@@ -119,7 +117,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     const total = Array.isArray(countResult) ? (countResult[0] as { total: number }).total : 0
 
     res.json({
-      products,
+      items,
       pagination: {
         current_page: pageNum,
         per_page: limitNum,
@@ -164,19 +162,10 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 
     const product = products[0]
 
-    // 获取商品图片
-    const [images] = await pool.execute(
-      'SELECT image_url, is_primary, sort_order FROM product_images WHERE product_id = ? ORDER BY sort_order ASC',
-      [productId],
-    )
-
     // 更新浏览次数
     await pool.execute('UPDATE products SET views = views + 1 WHERE id = ?', [productId])
 
-    res.json({
-      ...product,
-      images,
-    })
+    res.json(product)
   } catch (error) {
     console.error('获取商品详情错误:', error)
     res.status(500).json({ message: '服务器内部错误' })

@@ -107,9 +107,28 @@ const loadStats = async () => {
   try {
     loading.value = true
     const response = await getDashboardStats()
-    stats.value = response.data.data
+    const statsData = response.data
+    if (statsData) {
+      stats.value = statsData
+    } else {
+      console.warn('统计数据格式不正确:', statsData)
+      stats.value = {
+        users: 0,
+        products: 0,
+        orders: 0,
+        revenue: 0,
+        recentOrders: [],
+      }
+    }
   } catch (error) {
     console.error('加载统计数据失败:', error)
+    stats.value = {
+      users: 0,
+      products: 0,
+      orders: 0,
+      revenue: 0,
+      recentOrders: [],
+    }
   } finally {
     loading.value = false
   }

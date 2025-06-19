@@ -4,12 +4,11 @@ import { pool } from '../config/database'
 const router = express.Router()
 
 // 获取所有商品分类
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
     const [categories] = await pool.execute(`
       SELECT * FROM categories
-      WHERE is_active = TRUE
-      ORDER BY sort_order ASC, name ASC
+      ORDER BY id ASC, name ASC
     `)
     res.json(categories)
   } catch (error) {
@@ -23,7 +22,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
     const [categories] = await pool.execute(
-      'SELECT * FROM categories WHERE id = ? AND is_active = TRUE',
+      'SELECT * FROM categories WHERE id = ?',
       [id],
     )
 

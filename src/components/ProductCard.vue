@@ -2,7 +2,7 @@
   <va-card class="product-card" hover @click="goToDetail">
     <va-card-content class="product-image-container">
       <img
-        :src="product.primary_image || 'https://via.placeholder.com/300x300?text=No+Image'"
+        :src="product.image"
         :alt="product.name"
         class="product-image"
       />
@@ -39,7 +39,12 @@
       </div>
 
       <div class="product-actions">
-        <va-button size="medium" outline @click.stop="addToCart" :disabled="product.stock === 0">
+        <va-button
+          size="medium"
+          outline
+          @click.stop="addToCart"
+          :disabled="product.stock === 0"
+        >
           <va-icon name="shopping_cart" size="small" />
           加入购物车
         </va-button>
@@ -85,7 +90,7 @@ const buyNow = () => {
     router.push('/login')
     return
   }
-  cartStore.addToCart(props.product, 1)
+  addToCart()
   router.push('/checkout')
 }
 </script>

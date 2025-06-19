@@ -98,8 +98,14 @@ const loadUsers = async () => {
       limit: pagination.value.perPage,
       search: searchQuery.value,
     })
-    users.value = response.data.data.items || []
-    pagination.value.total = response.data.data.total
+    const responseData = response.data
+    if (responseData) {
+      users.value = responseData.items || []
+      pagination.value.total = responseData.pagination.total || 0
+    } else {
+      users.value = []
+      pagination.value.total = 0
+    }
   } catch (error) {
     console.error('加载用户失败:', error)
   } finally {

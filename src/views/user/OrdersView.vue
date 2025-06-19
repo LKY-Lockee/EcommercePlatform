@@ -98,16 +98,6 @@
           </div>
         </va-card-content>
       </va-card>
-
-      <!-- 分页 -->
-      <div v-if="totalPages > 1" class="pagination-container">
-        <va-pagination
-          v-model="currentPage"
-          :pages="totalPages"
-          :visible-pages="5"
-          @update:model-value="loadOrders"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -128,8 +118,6 @@ const cartStore = useCartStore()
 const activeTab = ref(0)
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
-const currentPage = ref(1)
-const totalPages = ref(1)
 const orders = ref<Order[]>([])
 
 // 订单状态映射
@@ -150,13 +138,11 @@ const filteredOrders = computed(() => {
 })
 
 // 加载订单列表
-const loadOrders = async (page = 1) => {
+const loadOrders = async () => {
   loading.value = true
   try {
-    const response = await getUserOrders({ page })
-    orders.value = response.data.data?.items || []
-    currentPage.value = page
-    totalPages.value = response.data.data?.totalPages || 1
+    const response = await getUserOrders()
+    orders.value = response.data || []
   } catch {
     orders.value = []
   } finally {
@@ -196,7 +182,7 @@ const handlePayOrder = async (order: Order) => {
   try {
     actionLoading.value = order.id
     await payOrderAPI(order.id)
-    await cartStore.fetchCart()
+    await cartStore.getCart()
     updateOrderStatus(order.id, 'paid')
   } catch {
     // Error handled by API layer

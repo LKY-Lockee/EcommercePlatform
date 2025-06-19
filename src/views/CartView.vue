@@ -15,12 +15,6 @@
           <va-card-content class="cart-content">
             <!-- 购物车头部 -->
             <div class="cart-header">
-              <va-checkbox
-                :model-value="allSelected"
-                @update:model-value="cartStore.toggleSelectAll"
-              >
-                全选
-              </va-checkbox>
               <span class="item-count">共 {{ cartStore.totalItems }} 件商品</span>
               <va-button
                 flat
@@ -28,7 +22,7 @@
                 @click="handleClearSelected"
                 :disabled="!cartStore.selectedItems.length"
               >
-                删除选中
+                清空
               </va-button>
             </div>
 
@@ -37,31 +31,27 @@
             <!-- 购物车商品列表 -->
             <div class="cart-items">
               <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
-                <va-checkbox
-                  :model-value="item.selected"
-                  @update:model-value="cartStore.toggleSelected(item.id)"
-                />
 
                 <div class="item-image">
                   <img
-                    :src="item.product.primary_image || 'https://via.placeholder.com/100x100'"
-                    :alt="item.product.name"
+                    :src="item.image"
+                    :alt="item.name"
                   />
                 </div>
 
                 <div class="item-info">
-                  <h3 class="item-name">{{ item.product.name }}</h3>
-                  <p class="item-description">{{ item.product.description }}</p>
+                  <h3 class="item-name">{{ item.name }}</h3>
+                  <p class="item-description">{{ item.description }}</p>
                   <div class="item-price">
-                    <span class="current-price">¥{{ formatPrice(item.product.price) }}</span>
+                    <span class="current-price">¥{{ formatPrice(item.price) }}</span>
                     <span
                       v-if="
-                        item.product.original_price &&
-                        Number(item.product.original_price) > Number(item.product.price)
+                        item.original_price &&
+                        Number(item.original_price) > Number(item.price)
                       "
                       class="original-price"
                     >
-                      ¥{{ formatPrice(item.product.original_price) }}
+                      ¥{{ formatPrice(item.original_price) }}
                     </span>
                   </div>
                 </div>
@@ -70,15 +60,15 @@
                   <va-counter
                     :model-value="item.quantity"
                     :min="1"
-                    :max="item.product.stock"
+                    :max="item.stock"
                     @update:model-value="(value: number) => handleUpdateQuantity(item.id, value)"
                   />
-                  <span class="stock-info">库存: {{ item.product.stock }}</span>
+                  <span class="stock-info">库存: {{ item.stock }}</span>
                 </div>
 
                 <div class="item-total">
                   <span class="total-price">
-                    ¥{{ (Number(item.product.price) * item.quantity).toFixed(2) }}
+                    ¥{{ (Number(item.price) * item.quantity).toFixed(2) }}
                   </span>
                 </div>
 
@@ -126,7 +116,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
@@ -139,10 +128,6 @@ const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
 }
-
-const allSelected = computed(
-  () => cartStore.items.length > 0 && cartStore.items.every((item) => item.selected),
-)
 
 const handleClearSelected = () => cartStore.clearSelected()
 const handleUpdateQuantity = (itemId: number, quantity: number) =>

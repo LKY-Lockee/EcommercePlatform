@@ -225,12 +225,13 @@ const loadProducts = async () => {
     }
 
     const response = await getProducts(params)
-    products.value = response.data.data.items
-    pagination.value = {
-      current_page: response.data.data.page,
-      per_page: response.data.data.limit,
-      total: response.data.data.total,
-      total_pages: response.data.data.totalPages,
+    const responseData = response.data
+    if (responseData && responseData.items) {
+      products.value = responseData.items
+      pagination.value = responseData.pagination
+    } else {
+      console.warn('商品数据格式不正确:', responseData)
+      products.value = []
     }
   } catch (error) {
     console.error('加载商品失败:', error)
@@ -243,7 +244,7 @@ const loadProducts = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories()
-    categories.value = response.data.data
+    categories.value = response.data
   } catch (error) {
     console.error('加载分类失败:', error)
   }

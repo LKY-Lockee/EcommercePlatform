@@ -23,34 +23,34 @@
       <div class="footer-section">
         <h4 class="section-title">购物指南</h4>
         <ul class="footer-links">
-          <li><router-link to="/guide/register" class="footer-link">新用户注册</router-link></li>
-          <li><router-link to="/guide/shopping" class="footer-link">购物流程</router-link></li>
-          <li><router-link to="/guide/payment" class="footer-link">支付方式</router-link></li>
-          <li><router-link to="/guide/delivery" class="footer-link">配送说明</router-link></li>
-          <li><router-link to="/guide/faq" class="footer-link">常见问题</router-link></li>
+          <li><router-link to="#" class="footer-link">新用户注册</router-link></li>
+          <li><router-link to="#" class="footer-link">购物流程</router-link></li>
+          <li><router-link to="#" class="footer-link">支付方式</router-link></li>
+          <li><router-link to="#" class="footer-link">配送说明</router-link></li>
+          <li><router-link to="#" class="footer-link">常见问题</router-link></li>
         </ul>
       </div>
 
       <div class="footer-section">
         <h4 class="section-title">售后服务</h4>
         <ul class="footer-links">
-          <li><router-link to="/service/return" class="footer-link">退换货政策</router-link></li>
-          <li><router-link to="/service/warranty" class="footer-link">质量保证</router-link></li>
-          <li><router-link to="/service/contact" class="footer-link">联系客服</router-link></li>
-          <li><router-link to="/service/feedback" class="footer-link">意见反馈</router-link></li>
-          <li><router-link to="/service/repair" class="footer-link">维修服务</router-link></li>
+          <li><router-link to="#" class="footer-link">退换货政策</router-link></li>
+          <li><router-link to="#" class="footer-link">质量保证</router-link></li>
+          <li><router-link to="#" class="footer-link">联系客服</router-link></li>
+          <li><router-link to="#" class="footer-link">意见反馈</router-link></li>
+          <li><router-link to="#" class="footer-link">维修服务</router-link></li>
         </ul>
       </div>
 
       <div class="footer-section">
         <h4 class="section-title">关于我们</h4>
         <ul class="footer-links">
-          <li><router-link to="/about/company" class="footer-link">公司介绍</router-link></li>
-          <li><router-link to="/about/careers" class="footer-link">加入我们</router-link></li>
-          <li><router-link to="/about/news" class="footer-link">新闻动态</router-link></li>
-          <li><router-link to="/about/investor" class="footer-link">投资者关系</router-link></li>
+          <li><router-link to="#" class="footer-link">公司介绍</router-link></li>
+          <li><router-link to="#" class="footer-link">加入我们</router-link></li>
+          <li><router-link to="#" class="footer-link">新闻动态</router-link></li>
+          <li><router-link to="#" class="footer-link">投资者关系</router-link></li>
           <li>
-            <router-link to="/about/responsibility" class="footer-link">社会责任</router-link>
+            <router-link to="#" class="footer-link">社会责任</router-link>
           </li>
         </ul>
       </div>

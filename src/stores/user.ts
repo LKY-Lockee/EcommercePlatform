@@ -35,7 +35,7 @@ export const useUserStore = defineStore('user', () => {
   const loginUser = async (loginData: LoginData) => {
     try {
       const response = await login(loginData)
-      const { user: userData, token: userToken } = response.data.data
+      const { user: userData, token: userToken } = response.data
 
       user.value = userData
       token.value = userToken
@@ -43,7 +43,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('token', userToken)
 
-      return { success: true, data: response.data.data }
+      return { success: true, data: response.data }
     } catch (error: unknown) {
       const err = error as ErrorResponse
       return {
@@ -57,7 +57,7 @@ export const useUserStore = defineStore('user', () => {
   const registerUser = async (registerData: RegisterData) => {
     try {
       const response = await register(registerData)
-      const { user: userData, token: userToken } = response.data.data
+      const { user: userData, token: userToken } = response.data
 
       user.value = userData
       token.value = userToken
@@ -65,7 +65,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('token', userToken)
 
-      return { success: true, data: response.data.data }
+      return { success: true, data: response.data }
     } catch (error: unknown) {
       const err = error as ErrorResponse
       return {
@@ -87,8 +87,8 @@ export const useUserStore = defineStore('user', () => {
   const fetchProfile = async () => {
     try {
       const response = await getUserInfo()
-      user.value = response.data.data
-      localStorage.setItem('user', JSON.stringify(response.data.data))
+      user.value = response.data
+      localStorage.setItem('user', JSON.stringify(response.data))
       return { success: true }
     } catch (error: unknown) {
       const err = error as ErrorResponse

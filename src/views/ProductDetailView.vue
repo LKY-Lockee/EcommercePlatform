@@ -12,29 +12,11 @@
       </div>
 
       <div v-else class="product-detail">
-        <!-- 面包屑导航 -->
-        <va-breadcrumbs class="breadcrumbs">
-          <va-breadcrumb-item :to="{ name: 'home' }">首页</va-breadcrumb-item>
-          <va-breadcrumb-item :to="{ name: 'products' }">商品列表</va-breadcrumb-item>
-          <va-breadcrumb-item>{{ product.name }}</va-breadcrumb-item>
-        </va-breadcrumbs>
-
         <div class="product-content">
           <!-- 商品图片 -->
           <div class="product-images">
             <div class="main-image">
-              <img :src="currentImage" :alt="product.name" class="main-img" />
-            </div>
-            <div v-if="productImages.length > 1" class="thumbnail-list">
-              <img
-                v-for="(image, index) in productImages"
-                :key="index"
-                :src="image.image_url"
-                :alt="`${product.name} ${index + 1}`"
-                class="thumbnail"
-                :class="{ active: currentImage === image.image_url }"
-                @click="currentImage = image.image_url"
-              />
+              <img :src="product.image" :alt="product.name" class="main-img" />
             </div>
           </div>
 
@@ -128,10 +110,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProductDetail } from '@/api/product'
-import type { Product, ProductImage } from '@/types'
+import type { Product } from '@/types'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
 
@@ -143,45 +125,10 @@ const userStore = useUserStore()
 const product = ref<Product | null>(null)
 const loading = ref(false)
 const quantity = ref(1)
-const currentImage = ref('')
-
-// 计算属性：统一处理图片格式
-const productImages = computed(() => {
-  if (!product.value?.images || !Array.isArray(product.value.images)) {
-    return []
-  }
-
-  return product.value.images.map((img, index) => {
-    if (typeof img === 'string') {
-      return { image_url: img, is_primary: index === 0 }
-    } else {
-      return img as ProductImage
-    }
-  })
-})
 
 const formatPrice = (price: number | string): string => {
   const numPrice = Number(price)
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
-}
-
-const getInitialImage = (product: Product): string => {
-  if (product.primary_image) {
-    return product.primary_image
-  }
-
-  if (Array.isArray(product.images) && product.images.length > 0) {
-    const firstImage = product.images[0]
-    if (typeof firstImage === 'string') {
-      return firstImage
-    } else {
-      // 如果是 ProductImage 对象，寻找主图或返回第一张
-      const primaryImage = (product.images as ProductImage[]).find((img) => img.is_primary)
-      return primaryImage?.image_url || (product.images[0] as ProductImage).image_url
-    }
-  }
-
-  return 'https://via.placeholder.com/500x500?text=No+Image'
 }
 
 const loadProduct = async () => {
@@ -189,8 +136,7 @@ const loadProduct = async () => {
   try {
     const productId = Number(route.params.id)
     const response = await getProductDetail(productId)
-    product.value = response.data.data
-    currentImage.value = getInitialImage(response.data.data)
+    product.value = response.data
   } catch {
     product.value = null
   } finally {

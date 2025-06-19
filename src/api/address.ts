@@ -41,7 +41,7 @@ export const getProvinces = () => {
   ])
 }
 
-// 根据省份获取城市列表（简化实现）
+// 根据省份获取城市列表
 export const getCitiesByProvince = (province: string) => {
   const cityMap: Record<string, string[]> = {
     北京: ['北京'],
@@ -387,7 +387,7 @@ export const getCitiesByProvince = (province: string) => {
   return Promise.resolve(cityMap[province] || [])
 }
 
-// 根据城市获取区县列表（简化实现）
+// 根据城市获取区县列表
 export const getDistrictsByCity = (city: string) => {
   const districtMap: Record<string, string[]> = {
     北京: [

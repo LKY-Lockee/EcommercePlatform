@@ -206,7 +206,7 @@ const loadAddresses = async () => {
   loading.value = true
   try {
     const response = await getUserAddresses()
-    addresses.value = response.data.data || []
+    addresses.value = response.data || []
   } catch {
     addresses.value = []
   } finally {
