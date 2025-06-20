@@ -23,17 +23,41 @@ npm install
 ### Compile and Hot-Reload for Development
 
 ```sh
-npm run dev
+npm run dev:all
 ```
 
 ### Type-Check, Compile and Minify for Production
 
 ```sh
-npm run build
+npm run build:all
+```
+
+### Preview Production Build
+
+```sh
+npm run preview:all
 ```
 
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
 npm run lint
+```
+
+### Create `.env` file before running the project
+
+```ini
+# Database
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=123456
+DB_NAME=ecommerce_platform
+DB_PORT=3306
+
+# JWT
+JWT_SECRET=ecommerce_platform
+
+# Server
+PORT=3001
+VITE_API_URL=https://localhost:3001/api
 ```
