@@ -15,6 +15,7 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
+public/images/
 
 # Editor directories and files
 .idea
@@ -25,3 +26,5 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+.env*

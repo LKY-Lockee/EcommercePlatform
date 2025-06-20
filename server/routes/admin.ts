@@ -208,7 +208,7 @@ router.get('/products', async (req: Request, res: Response): Promise<void> => {
 // 创建商品
 router.post('/products', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, description, price, category_id, stock, images } = req.body
+    const { name, description, price, category_id, stock, image } = req.body
 
     if (!name || !price || !category_id) {
       res.status(400).json({ message: '商品名称、价格和分类为必填项' })
@@ -216,8 +216,8 @@ router.post('/products', async (req: Request, res: Response): Promise<void> => {
     }
 
     const [result] = await pool.execute(
-      'INSERT INTO products (name, description, price, category_id, stock, images) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price, category_id, stock || 0, JSON.stringify(images || [])],
+      'INSERT INTO products (name, description, price, category_id, stock, image) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, description, price, category_id, stock || 0, image],
     )
 
     res.status(201).json({

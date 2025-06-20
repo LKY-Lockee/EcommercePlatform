@@ -145,9 +145,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
     // 为每个订单获取订单项目
     const ordersWithItems = await Promise.all(
       orders.map(async (order) => {
-        const [itemRows] = await pool.execute('SELECT * FROM order_items WHERE order_id = ?', [
-          order.id,
-        ])
+        const [itemRows] = await pool.execute(
+          `SELECT oi.*, p.image as product_image
+           FROM order_items oi
+           LEFT JOIN products p ON oi.product_id = p.id
+           WHERE oi.order_id = ?`,
+          [order.id]
+        )
         return {
           ...order,
           items: itemRows,
@@ -187,7 +191,13 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
     }
 
     // 获取订单详情
-    const [itemRows] = await pool.execute('SELECT * FROM order_items WHERE order_id = ?', [id])
+    const [itemRows] = await pool.execute(
+      `SELECT oi.*, p.image as product_image
+       FROM order_items oi
+       LEFT JOIN products p ON oi.product_id = p.id
+       WHERE oi.order_id = ?`,
+      [id]
+    )
 
     const order = orders[0]
     order.items = itemRows as unknown[]

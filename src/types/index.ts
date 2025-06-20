@@ -129,7 +129,7 @@ export interface ProductCreateData {
   sku: string
   status?: 'active' | 'inactive'
   featured?: number
-  images?: string[]
+  image?: string
   specifications?: Record<string, unknown>
 }
 
@@ -186,7 +186,7 @@ export interface OrderItem {
   order_id: number
   product_id: number
   product_name: string
-  product_image?: string
+  product_image: string
   product_price: number
   quantity: number
   subtotal: number

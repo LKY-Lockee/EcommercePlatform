@@ -47,7 +47,7 @@
           <div class="order-items">
             <div v-for="item in order.items" :key="item.id" class="order-item">
               <img
-                :src="getProductImage(item.product_id) || 'https://via.placeholder.com/80x80'"
+                :src="item.product_image"
                 :alt="item.product_name"
                 class="item-image"
               />
@@ -165,10 +165,6 @@ const formatDate = (dateString: string) => {
 const formatPrice = (price: number | string) => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price
   return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2)
-}
-
-const getProductImage = (productId: number) => {
-  return `https://via.placeholder.com/80x80?text=Product${productId}`
 }
 
 const updateOrderStatus = (orderId: number, status: Order['status']) => {
