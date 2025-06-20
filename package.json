@@ -2,19 +2,21 @@
 	"name": "ecommerce-platform",
 	"version": "0.0.0",
 	"private": true,
-	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "run-p type-check \"build-only {@}\" --",
 		"preview": "vite preview",
+		"preview-network": "vite preview --host",
 		"build-only": "vite build",
 		"type-check": "vue-tsc --build",
 		"lint": "eslint . --fix",
 		"format": "prettier --write src/",
-		"server": "node server/index.js",
+		"server": "node dist/server/index.js",
 		"server:dev": "tsx server/index.ts",
 		"server:build": "tsc --project tsconfig.server.json",
-		"dev:all": "concurrently \"npm run server:dev\" \"npm run dev\""
+		"dev:all": "concurrently \"npm run server:dev\" \"npm run dev\"",
+		"build:all": "npm-run-all2 build server:build",
+		"preview:all": "concurrently \"npm run server\" \"npm run preview-network\""
 	},
 	"dependencies": {
 		"@types/bcryptjs": "^2.4.6",
