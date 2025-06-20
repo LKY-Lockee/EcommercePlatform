@@ -8,7 +8,7 @@
         </div>
 
         <div class="card-body">
-          <va-form @submit.prevent="handleRegister" class="register-form">
+          <va-form ref="formRef" @submit.prevent="handleRegister" class="register-form">
             <div class="form-row">
               <label class="form-label">用户名</label>
               <va-input
@@ -110,9 +110,11 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import type { RegisterData } from '@/types'
+import { useToast } from 'vuestic-ui'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { notify } = useToast()
 
 const registerForm = ref<RegisterData>({
   username: '',
@@ -125,44 +127,80 @@ const confirmPassword = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
+const formRef = ref()
 
 // 验证规则
-const required = (value: string) => !!value || '此字段是必填的'
-
-const usernameRule = (value: string) => {
-  if (value.length < 3) return '用户名至少需要3个字符'
-  if (value.length > 20) return '用户名不能超过20个字符'
-  if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(value)) return '用户名只能包含字母、数字、下划线和中文'
+const required = (value: unknown) => {
+  if (!value || String(value).trim() === '') {
+    return '此字段是必填的'
+  }
   return true
 }
 
-const emailRule = (value: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || '请输入有效的邮箱地址'
-}
-
-const phoneRule = (value: string) => {
-  if (!value) return true
-  return /^1[3-9]\d{9}$/.test(value) || '请输入有效的手机号'
-}
-
-const passwordRule = (value: string) => {
-  if (value.length < 6) return '密码至少需要6个字符'
-  if (value.length > 50) return '密码不能超过50个字符'
-  if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(value)) return '密码必须包含字母和数字'
+const usernameRule = (value: unknown) => {
+  const str = String(value || '').trim()
+  if (str.length < 3) return '用户名至少需要3个字符'
+  if (str.length > 20) return '用户名不能超过20个字符'
+  if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(str)) return '用户名只能包含字母、数字、下划线和中文'
   return true
 }
 
-const confirmPasswordRule = (value: string) => {
-  return value === registerForm.value.password || '两次密码输入不一致'
+const emailRule = (value: unknown) => {
+  const str = String(value || '').trim()
+  if (!str) return '邮箱是必填的'
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str) || '请输入有效的邮箱地址'
+}
+
+const phoneRule = (value: unknown) => {
+  const str = String(value || '').trim()
+  if (!str) return true
+  return /^1[3-9]\d{9}$/.test(str) || '请输入有效的手机号'
+}
+
+const passwordRule = (value: unknown) => {
+  const str = String(value || '').trim()
+  if (str.length < 6) return '密码至少需要6个字符'
+  if (str.length > 50) return '密码不能超过50个字符'
+  if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(str)) return '密码必须包含字母和数字'
+  return true
+}
+
+const confirmPasswordRule = (value: unknown) => {
+  const str = String(value || '').trim()
+  return str === registerForm.value.password || '两次密码输入不一致'
 }
 
 const handleRegister = async () => {
+  // 验证表单
+  const isValid = await formRef.value?.validate()
+  if (!isValid) {
+    notify({
+      message: '请检查表单中的错误信息',
+      color: 'danger',
+    })
+    return
+  }
+
   loading.value = true
   try {
     const result = await userStore.register(registerForm.value)
     if (result.success) {
+      notify({
+        message: '注册成功！',
+        color: 'success',
+      })
       router.push('/')
+    } else {
+      notify({
+        message: result.message || '注册失败',
+        color: 'danger',
+      })
     }
+  } catch {
+    notify({
+      message: '注册失败，请稍后重试',
+      color: 'danger',
+    })
   } finally {
     loading.value = false
   }

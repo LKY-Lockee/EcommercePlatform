@@ -111,7 +111,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 
     // 检查购物车项是否属于当前用户
     const [cartRows] = await connection.execute(
-      'SELECT c.*, p.stock FROM cart c JOIN products p ON c.product_id = p.id WHERE c.id = ? AND c.user_id = ?',
+      'SELECT c.*, p.stock FROM cart c JOIN products p ON c.product_id = p.id WHERE c.product_id = ? AND c.user_id = ?',
       [id, req.user!.id],
     )
 
@@ -129,7 +129,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
       return
     }
 
-    await connection.execute('UPDATE cart SET quantity = ? WHERE id = ?', [quantity, id])
+    await connection.execute('UPDATE cart SET quantity = ? WHERE product_id = ?', [quantity, id])
 
     connection.release()
     res.json({ message: '更新成功' })

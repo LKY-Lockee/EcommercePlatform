@@ -61,7 +61,7 @@
                     :model-value="item.quantity"
                     :min="1"
                     :max="item.stock"
-                    @update:model-value="(value: number) => handleUpdateQuantity(item.id, value)"
+                    @update:model-value="(value: number) => handleUpdateQuantity(item.product_id, value)"
                   />
                   <span class="stock-info">库存: {{ item.stock }}</span>
                 </div>

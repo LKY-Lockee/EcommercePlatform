@@ -8,7 +8,7 @@
         </div>
 
         <div class="card-body">
-          <va-form @submit.prevent="handleLogin" class="login-form">
+          <va-form ref="formRef" @submit.prevent="handleLogin" class="login-form">
             <div class="form-row">
               <label class="form-label">用户名或邮箱</label>
               <va-input
@@ -70,9 +70,11 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import type { LoginData } from '@/types'
+import { useToast } from 'vuestic-ui'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { notify } = useToast()
 
 const loginForm = ref<LoginData>({
   username: '',
@@ -82,18 +84,48 @@ const loginForm = ref<LoginData>({
 const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
+const formRef = ref()
 
 // 验证规则
-const required = (value: string) => !!value || '此字段是必填的'
+const required = (value: unknown) => {
+  if (!value || String(value).trim() === '') {
+    return '此字段是必填的'
+  }
+  return true
+}
 
 const handleLogin = async () => {
+  // 验证表单
+  const isValid = await formRef.value?.validate()
+  if (!isValid) {
+    notify({
+      message: '请检查表单中的错误信息',
+      color: 'danger',
+    })
+    return
+  }
+
   loading.value = true
   try {
     const result = await userStore.login(loginForm.value)
     if (result.success) {
+      notify({
+        message: '登录成功！',
+        color: 'success',
+      })
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/')
+    } else {
+      notify({
+        message: result.message || '登录失败',
+        color: 'danger',
+      })
     }
+  } catch {
+    notify({
+      message: '登录失败，请稍后重试',
+      color: 'danger',
+    })
   } finally {
     loading.value = false
   }
